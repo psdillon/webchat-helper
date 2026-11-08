@@ -1,0 +1,9 @@
+.DS_Store
+.gradle/
+.intellijPlatform/
+.kotlin/
+build/
+out/
+# IDE project files are generated from the Gradle build
+.idea/
+*.iml

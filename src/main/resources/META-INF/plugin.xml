@@ -1,0 +1,19 @@
+<!-- Plugin Configuration File: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.pauldillon.webchathelper</id>
+    <name>WebChatHelper</name>
+    <vendor>Paul Dillon</vendor>
+
+    <!-- #3Q0: the plugin drives the ChatGPT web UI only; it does not use any OpenAI APIs. -->
+    <description><![CDATA[
+        <p>Runs the ChatGPT web UI inside the IDE and automates working with project files.</p>
+        <ul>
+            <li>ChatGPT in an embedded browser (JCEF) in a tool window on the right of the IDE.</li>
+            <li>Attach project files and folders to the prompt, with configurable exclusions.</li>
+            <li>Diff code from ChatGPT's responses against project files.</li>
+        </ul>
+        <p>Uses the ChatGPT website with your own login. It does not use any OpenAI APIs.</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+</idea-plugin>

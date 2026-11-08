@@ -3,10 +3,10 @@
 Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts (driving ChatGPT's page from JCEF) early, so problems surface before the features that depend on them are built. Each phase should end with something runnable in a sandbox IDE (`runIde`).
 
 ## Phase 1: Project scaffold
-- [ ] Create a Kotlin IntelliJ Platform plugin project using the IntelliJ Platform Gradle Plugin (2.x), targeting a recent IntelliJ IDEA version.
-- [ ] `plugin.xml` with plugin ID, name and description; no OpenAI API dependencies (#3Q0).
-- [ ] Confirm `runIde` starts a sandbox IDE with the plugin loaded.
-- [ ] Add `.gitignore` for Gradle/IDE output (`.gradle/`, `build/`, `.idea/` as appropriate).
+- [x] Create a Kotlin IntelliJ Platform plugin project using the IntelliJ Platform Gradle Plugin (2.x), targeting a recent IntelliJ IDEA version.
+- [x] `plugin.xml` with plugin ID, name and description; no OpenAI API dependencies (#3Q0).
+- [x] Confirm `runIde` starts a sandbox IDE with the plugin loaded.
+- [x] Add `.gitignore` for Gradle/IDE output (`.gradle/`, `build/`, `.idea/` as appropriate).
 
 ## Phase 2: Tool window and browser
 - [ ] Right-anchored tool window (#0E6) hosting a `JBCefBrowser` that loads ChatGPT (#R4F).
