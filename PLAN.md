@@ -74,7 +74,7 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 
 ### Phase 8 notes
 - Zips are written with the platform's `Compressor.Zip` (`FolderZip`, unit tested), each in its own folder from `FileUtil.createTempDirectory` so it can have the folder's name. Every included folder gets a folder entry, so empty folders are kept (#R58), including folders whose contents are all excluded. Excluded folders are left out.
-- For the project root, the zip and the prompt message use the root folder's name ("project files under webchat-helper attached"), since its project-relative path is empty.
+- For the project root, the zip and the prompt message use the root folder's name ("webchat-helper/ attached"), since its project-relative path is empty.
 - A zip counts as one file towards ChatGPT's per-message limit and is checked against the per-file size limit once written (#UP4). Every file in a zip is recorded as attached (#7P2).
 - Deleting zips after upload (#H4O): the page shows nothing the plugin can read that says an upload has finished, and deleting the file before ChatGPT has read it breaks the upload. So `TempUploads` checks the prompt's attachment list every 2 seconds and deletes a zip once it has left the list: the prompt was sent (ChatGPT only allows that once uploads have finished) or the user removed it. A zip that never appears within a minute is taken as refused by ChatGPT and deleted. Anything left is deleted when the project closes, and on IDE exit. Attachments are matched by name, allowing for ChatGPT's renaming of duplicates (`src.zip` shown as `src(1).zip`). Phase 9's diff files can use the same mechanism.
 

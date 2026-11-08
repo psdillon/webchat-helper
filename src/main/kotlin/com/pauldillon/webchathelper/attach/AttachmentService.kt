@@ -145,7 +145,7 @@ class AttachmentService(private val project: Project, private val scope: Corouti
         injectMessage(bridge, parts.joinToString("") { part ->
             when (part) {
                 is FilePart -> "${part.relativePath} attached\n\n" // #C5S
-                is ZipPart -> "project files under ${part.shownPath} attached\n\n" // #Q18
+                is ZipPart -> "${part.shownPath}/ attached\n\n" // #Q18
             }
         })
     }

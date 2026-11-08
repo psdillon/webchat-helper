@@ -52,7 +52,7 @@ In this document:
   * Whether folders are always shown, or only shown when the search text ends with '/' (the default GotoFileModel behaviour), will be configurable in settings. #4QH
 * A button under the JCEF will allow selection of multiple files/folders using the standard FileChooser + FileChooserDescriptor approach. #Z7H
 * For each file added, the text "<file path> attached<linebreak><linebreak>" is to be injected into the prompt. #C5S
-* If the user attempts to attach a folder of more than 3 files, the folder will be attached as a zip and the text "project files under <path> attached<linebreak><linebreak>" will be injected into the prompt, otherwise the files within the folder will be attached as individual files with the appropriate message injected into the prompt. #Q18
+* If the user attempts to attach a folder of more than 3 files, the folder will be attached as a zip and the text "<path>/ attached<linebreak><linebreak>" will be injected into the prompt, otherwise the files within the folder will be attached as individual files with the appropriate message injected into the prompt. #Q18
   * Files are counted after exclusions have been applied.  Folders are not counted. #XI4
   * Empty folders are included in the zip. #R58
   * The zip is named after the selected folder.  If the selected folder is the project root, the zip is named after the project root folder. #01S
