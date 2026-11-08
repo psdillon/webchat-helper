@@ -48,6 +48,14 @@ class WebChatHelperConfigurable : BoundSearchableConfigurable(DISPLAY_NAME, ID, 
                         .comment("When off, folders are shown only when the search text ends with '/'.")
                 }
             }
+            // #XIO, #3PS
+            group("ChatGPT's Patches") {
+                row {
+                    checkBox("Make the diff of a patch read-only")
+                        .bindSelected(state::patchDiffReadOnly)
+                        .comment("Once a project file has been changed, the patch can no longer be shown as a diff.")
+                }
+            }
         }
     }
 

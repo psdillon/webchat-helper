@@ -32,6 +32,9 @@ class WebChatHelperSettings : PersistentStateComponent<WebChatHelperSettings.Set
          * with '/' (the default GotoFileModel behaviour) (#N67, #4QH).
          */
         var atAlwaysShowFolders: Boolean = false
+
+        /** Whether the diff of a patch from ChatGPT is read-only (#XIO, #3PS). */
+        var patchDiffReadOnly: Boolean = true
     }
 
     private var state = SettingsState()

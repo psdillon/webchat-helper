@@ -94,13 +94,29 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - A diff file counts as one file towards ChatGPT's limits and is checked against the size limit once written (#UP4). Like a zip, it is deleted through `TempUploads` (#H4O). Every file in the folder is recorded as attached for matching responses (#7P2), not only the changed ones.
 
 ## Phase 10: Diffs of ChatGPT responses
-- [ ] Detect code blocks in ChatGPT responses and determine their file names; match to the most recently attached file with that name (#AD4, #Z98, #7P2).
-- [ ] Inject a diff button into ChatGPT's page only when a match is found (#8N4); snippets diff against the whole file (#YH8).
-- [ ] Open the platform diff window with the response content against the project file, allowing changes to be applied (#3PS).
-- [ ] Intercept zip downloads from responses (`CefDownloadHandler`), add a diff button, and diff zip entries against project files by project-relative path, skipping unmatched files (#0RY, #15X, #F3R).
+- [x] Detect code blocks in ChatGPT responses and determine their file names; match to the most recently attached file with that name (#AD4, #Z98, #7P2).
+- [x] Inject a diff button into ChatGPT's page only when a match is found (#8N4); snippets diff against the whole file (#YH8).
+- [x] Open the platform diff window with the project file on the left and the response content on the right, allowing changes to be applied (#XIO, #3PS).
+- [x] Fetch files from download links, and diff zips against the project by project-relative path, including files that are new in the zip (#0RY, #15X, #F3R).
+- [x] Show diff and apply buttons on every code block and download whose file can be identified, zips and patches included (#XIO, #AD4, #8N4).
+- [x] Preview patches with the project file against the patched file, and apply them, creating and deleting files (#XIO).
+- [x] Apply a code block, download or zip to the project (#XIO).
+- [x] Add a code block's buttons only once its response has been written (#XIO).
+- [x] Make the project side of a patch's diff editable when the setting allows it (#3PS).
+- [x] Leave project files the zip doesn't have out of a zip's diff (#F3R).
+- [x] Add a setting for whether a patch's diff is read-only, on by default (#X4G, #3PS).
+
+### Phase 10 notes
+- File names: the page script reads the last line of the text before a code block or download link, then the other places in the note under #Z98 in `SPEC.md`. Patches are recognised by "Diff:" on that line (code blocks) or the link's `.diff`/`.patch` name.
+- The page script keeps the buttons up to date with a `MutationObserver`, as responses stream in and ChatGPT redraws them. The plugin gives it the attached file names when the page loads and after each attachment, and works out the matching project file when a button is clicked. Tested against a real response; the zip link and code blocks were markup as of November 2026.
+- A download link has no address and ignores `element.click()`, so the plugin clicks it with real mouse input through the DevTools protocol (`Input.dispatchMouseEvent`). Zips then download straight away, but ChatGPT shows a text file in a side panel with its own Download button, which does respond to `element.click()`. Either way ChatGPT creates a `blob:` address and clicks a temporary `<a download>`, so the page script cancels that click and reads the blob, and nothing reaches the user's Downloads folder (`ChatGptPage.startDownloadScript`, `finishDownloadScript`). The panel is closed again afterwards.
+- These don't work for taking over a download from the plugin: a `CefDownloadHandler` is never called, even when added to the client before the browser is created (cause not found), and the DevTools protocol's `Browser.setDownloadBehavior` never answers when called from the plugin.
+- Patches follow the platform's patch classes (`PatchReader`, `GenericPatchApplier`) and are worked out in memory from the editors' text (`ResponsePatch`, unit tested). All the files are worked out before any is changed, so a patch that doesn't fit changes nothing. Applied changes go through documents where the file has one, so they keep the file's line separators.
+- A zip is compared as a folder with the project root in the platform's folder diff. `DirDiffSettings` on the request chain leaves out project files the zip doesn't have, while files that are new in the zip are included (#F3R). Entries that could point outside the unpacked folder (`..`, absolute paths) are skipped (`ResponseZip`, unit tested). The unpacked folder is kept until the IDE exits, as the diff window reads it while open.
+- While ChatGPT writes a response, the response's `[data-dil-response]` element has a `data-d-streaming-reveal` attribute, which it removes at the end (recorded from a real response). The page script watches for that change, as removing an attribute isn't otherwise a change it sees.
+- If the page has visible code the selectors don't recognise, the user is warned once per page load.
 
 ## Open questions to raise when reached
 - Browser drawing glitches (found in Phase 7, deferred): parts of ChatGPT's page are drawn misaligned, and stray characters that aren't in the prompt can appear, after the browser loses focus or the plugin edits the prompt. Resizing the tool window fixes it, so the page itself is fine; it is the IDE's off-screen drawing of the browser, probably redrawing only changed areas at 150% display scaling, made worse by the sandbox's software rendering. To try: have the browser redraw its whole view (`CefBrowser.invalidate()`, or `wasResized`) after the plugin edits the page and when the browser loses focus; check whether it also happens in the normal IDE with GPU acceleration; otherwise report it to JetBrains.
 - Backticks in injected messages (#FYF, found in Phase 9, deferred until after the MVP): ChatGPT's prompt box doesn't style them as inline code, and pasted text has the same problem, though ChatGPT still receives the literal backticks. Probably its markdown shortcut only fires on the typed closing backtick (not tested). To try: insert each path up to its closing backtick, then insert that backtick separately. Styled text would probably lose its backticks in the prompt's text, so `InjectedMessages`, which finds earlier messages by their exact text, would need reworking.
 - The Phase 5 spike may change the approach for file upload.
-- Phase 10: how the file name for a response code block is determined (code block header, nearby text, or another heuristic). The spec defines the match rule but not how the name is found.

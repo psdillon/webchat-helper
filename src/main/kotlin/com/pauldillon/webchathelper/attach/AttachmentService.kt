@@ -195,6 +195,7 @@ class AttachmentService(private val project: Project, private val scope: Corouti
             }
         }
         injectMessage(bridge, message, noFilesSent = sent.isEmpty())
+        bridge.setAttachedFileNames(attachedFiles.names()) // #AD4
     }
 
     /**

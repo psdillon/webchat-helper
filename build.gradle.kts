@@ -19,6 +19,9 @@ dependencies {
         }
         // JCEF (JBCefBrowser etc.) is a separate bundled plugin since build 263 (#R4F).
         bundledPlugin("com.intellij.modules.jcef")
+        // Applying and previewing ChatGPT's patches uses the platform's patch classes (#XIO).
+        bundledPlugin("com.intellij.platform.vcs")
+        bundledModule("intellij.platform.vcs.core")
     }
     // Plain unit tests of logic that doesn't need the IDE running.
     testImplementation("junit:junit:4.13.2")

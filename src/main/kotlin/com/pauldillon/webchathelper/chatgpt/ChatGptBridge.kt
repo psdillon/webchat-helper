@@ -13,12 +13,16 @@ import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefDevToolsClient
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
 import org.cef.handler.CefLoadHandlerAdapter
 import java.nio.file.Path
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -52,6 +56,8 @@ class ChatGptBridge : Disposable {
 
     @Volatile
     private var binding: Binding? = null
+
+    private val downloadLock = Mutex()
 
     /** Connects the bridge to [browser], replacing any previous browser. Call before the browser loads. */
     fun bind(browser: JBCefBrowser) {
@@ -110,6 +116,40 @@ class ChatGptBridge : Disposable {
             })
         } finally {
             runCatching { devTools.call("Runtime.releaseObject", JsonObject().apply { addProperty("objectId", objectId) }) }
+        }
+    }
+
+    /** Tells the page which file names have been attached, so it can add diff buttons (#AD4). */
+    suspend fun setAttachedFileNames(names: Collection<String>) {
+        evaluateScript(ChatGptPage.setAttachedNamesScript(names))
+    }
+
+    /**
+     * Fetches the file behind the download link identified by [link], without it reaching the user's
+     * Downloads folder.
+     */
+    suspend fun downloadLink(link: String): ByteArray = downloadLock.withLock {
+        // Covers every step, as a DevTools call that never answers would otherwise hold the lock for good.
+        withTimeoutOrNull(DOWNLOAD_TIMEOUT_MS) {
+            val position = evaluateScript(ChatGptPage.startDownloadScript(link)).asJsonObject
+            clickAt(position.get("x").asDouble, position.get("y").asDouble)
+            Base64.getDecoder().decode(evaluateScript(ChatGptPage.finishDownloadScript()).asString)
+        } ?: throw ChatGptPageException("ChatGPT didn't provide the file. The link may have expired.")
+    }
+
+    /** Clicks the point ([x], [y]) in the page with real mouse input. */
+    private suspend fun clickAt(x: Double, y: Double) {
+        val devTools = currentBinding().devTools()
+        for (type in listOf("mouseMoved", "mousePressed", "mouseReleased")) {
+            val moved = type == "mouseMoved"
+            devTools.call("Input.dispatchMouseEvent", JsonObject().apply {
+                addProperty("type", type)
+                addProperty("x", x)
+                addProperty("y", y)
+                addProperty("button", if (moved) "none" else "left")
+                addProperty("buttons", if (type == "mousePressed") 1 else 0)
+                addProperty("clickCount", if (moved) 0 else 1)
+            })
         }
     }
 
@@ -197,6 +237,7 @@ class ChatGptBridge : Disposable {
 
     private companion object {
         const val PROBLEM = "Something went wrong in ChatGPT's page."
+        const val DOWNLOAD_TIMEOUT_MS = 30_000L
     }
 }
 

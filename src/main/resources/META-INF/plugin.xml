@@ -18,6 +18,7 @@
     <depends>com.intellij.modules.platform</depends>
     <!-- #R4F: the embedded browser (JBCefBrowser) is provided by the bundled "Web Browser (JCEF)" plugin. -->
     <depends>com.intellij.modules.jcef</depends>
+    <depends>com.intellij.modules.vcs</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- #0E6: anchored on the right, like other AI tool windows. -->

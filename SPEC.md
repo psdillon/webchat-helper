@@ -81,23 +81,35 @@ In this document:
   * Each subsequent message is injected directly after the previously injected messages. #R1F
   * If the previously injected messages have been modified, the new message is injected at the start of the prompt. #8K9
   * The trailing blank line of each message separates it from the next message. #4UZ
-* The first time a file or zip is attached to a conversation, the following text and a blank line are injected at the start of the prompt, ahead of the attachment's message: "These files are from a software project I have open in my IDE. All paths are relative to the project root. These files provide a snapshot of a part or all of my project.  When uploading multiple files I may zip them first.  If I upload a file for the same path more than once, the most recently uploaded file replaces the previous file(s), thereby updating the snapshot.  I may also upload a diff, which also updates the snapshot." #I2K
+* The first time a file or zip is attached to a conversation, the following text and a blank line are injected at the start of the prompt, ahead of the attachment's message: "These files are from a software project I have open in my IDE. All paths are relative to the project root. These files provide a snapshot of a part or all of my project.  When uploading multiple files I may zip them first.  If I upload a file for the same path more than once, the most recently uploaded file replaces the previous file(s), thereby updating the snapshot.  I may also upload a patch or diff, which also updates the snapshot.\n\nYou may make changes to my project by either:\n* Providing a code block or download of a new or replacement file, with the path of the file directly before it.\n* Providing a patch file in a code block or download, with the text "Diff:" directly before it.\n* Providing a zip download containing new and/or replacement files.\nNote that:\n* Files must be referenced by paths relative to the project root.\n* Patches are the only way to delete files." #I2K
   * Note: the first time is when the conversation has no files in its snapshot folder and the text is not shown on the page, in the prompt or in a sent message. The page has to be checked because files sent before a chat has an ID are not in its snapshot (#W3J).
 * If an attachment would exceed ChatGPT's file count or file size limits, the attachment is stopped and the user is informed. #UP4
 * ChatGPT does not accept empty files, so an empty file that would be attached as an individual file (whether selected directly or from a folder) is not attached, no "`<file path>` attached" text is injected for it, and the user is informed.  Other files in the same attachment are still attached.  Empty files in a zip are included in the zip as normal. #E0Z
 * Which binary files are included when attaching will be configurable.  Currently, binary files attached individually or in a zip are sent as normal, while a binary file in a diff appears only as a "Binary files X and Y differ" line, so its contents are not sent. NEEDS REFINEMENT
 
 ### Diffs of Files Provided by ChatGPT #GD3
-* If a chatgpt response contains a file or file snippet that matches a project file, a button will be added within ChatGPT's page to open a diff window against the matching project file. #AD4
-  * The matching project file is the most recently attached file with the same file name. #Z98
+* Whenever chatgpt responds with a code block or download link, buttons are added next to it within ChatGPT's page.  A code block's buttons are added once ChatGPT has finished writing the response: #XIO
+  * If the code block is preceded with "Diff:" or the download link is a .diff or .patch file:
+    * A diff button should be shown, which will show the intellij diff viewer with the full project files on the left, and the full patched files on the right.  It shows every file in the patch, including files the patch creates or deletes.  It is read-only unless the setting for this is turned off.
+    * An apply button should be shown, which will apply the diff/patch to the project, including creating and deleting files.
+    * If any part of the patch can't be applied, the user is told and no project file is changed.
+  * Otherwise, if the download link is a zip:
+    * A diff button should be shown, which will show the intellij diff viewer that compares the project files on the left to the zip contents on the right.
+    * An apply button should be shown, which will copy the zip files into the project, replacing files if needed.
+  * Otherwise:
+    * A diff button should be shown, which will show the intellij diff viewer that compares the project file identified by the immediately preceding text on the left with the code block content or download content on the right.
+    * An apply button should be shown, that copies the code block or download content into the project file identified by the immediately preceding text.
+* The project file for a code block or download that isn't a patch or zip is the one at the path in the text directly before it (#I2K).  If there is no file at that path it is a new file: the diff shows the content against nothing, and applying creates the file. #AD4
+  * If the text directly before it names a file without giving its path, the project file is the most recently attached file with that name. #Z98
+    * Note: a response's file is found from the last line of the text directly before the code block or download link if that line is a path, then the last attached file name in that text.  A code block's first line is also used if it is a comment holding only a path, and a download link's own text if it names an attached file.  A path that would be outside the project is ignored.
   * Files attached as part of a folder (whether attached as individual files or as a zip) count as attached files for matching. #7P2
   * The record of attached files is held in memory only and is not retained across IDE restarts. #3JG
-  * If no matching file is found, no button is added and nothing is downloaded. #8N4
+  * If no project file can be identified, no buttons are added and nothing is downloaded. #8N4
   * File snippets are diffed against the whole project file; the user is expected to interpret the resulting diff. #YH8
-* If a chatgpt response contains a zip, a button will be added within ChatGPT's page to open a diff window of the zip contents against the current project files. #0RY
+* A zip in a chatgpt response is compared with the current project files. #0RY
   * Paths in the zip are treated as relative to the project root. #15X
-  * Files in the zip with no matching project file are not shown in the diff. #F3R
-* Changes can be applied to the project files from the diff window. #3PS
+  * Files in the zip with no matching project file are included in the diff, as ChatGPT may be contributing new files.  Project files with no matching file in the zip are not shown. #F3R
+* Changes can be applied to the project files from the diff window, unless it is a read-only patch diff. #3PS
 
 ### Settings #X4G
 * The settings will be an application-level page in the IDE Settings dialog, applying to all projects. #Y0G
@@ -106,3 +118,4 @@ In this document:
   * The exclusion glob list. #8LI
   * Single or multiple selection in the '@' file/folder selection dialog. #T48
   * Whether folders are always shown in the '@' file/folder selection dialog. #N67
+  * Whether the diff viewer for a patch is read-only, which is on by default, as a patch can no longer be shown as a diff once the project file has been changed.

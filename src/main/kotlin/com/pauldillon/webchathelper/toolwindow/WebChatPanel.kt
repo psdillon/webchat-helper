@@ -13,6 +13,7 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.util.ui.JBUI
 import com.pauldillon.webchathelper.chatgpt.ChatGptBridge
 import com.pauldillon.webchathelper.chatgpt.ChatGptPage
+import com.pauldillon.webchathelper.diff.ResponseActions
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
@@ -45,6 +46,7 @@ class WebChatPanel(val project: Project) : JPanel(BorderLayout()), Disposable, U
         add(createToolbar(), BorderLayout.SOUTH)
         transferHandler = AttachDropHandler(this)
         AtFileChooser(this)
+        ResponseActions.getInstance(project).connect(bridge, this)
     }
 
     /**

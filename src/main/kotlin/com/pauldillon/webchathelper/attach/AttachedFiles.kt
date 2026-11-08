@@ -20,4 +20,7 @@ class AttachedFiles {
 
     /** The project-relative path of the most recently attached file named [fileName], or null. */
     fun latestWithName(fileName: String): String? = latestByName[fileName]
+
+    /** The names of all the attached files; the page needs them to decide where to add diff buttons (#8N4). */
+    fun names(): Set<String> = latestByName.keys.toSet()
 }
