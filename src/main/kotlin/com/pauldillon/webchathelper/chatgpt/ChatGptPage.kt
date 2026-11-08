@@ -220,6 +220,17 @@ object ChatGptPage {
         """,
     )
 
+    /**
+     * Whether [text] is shown anywhere on the page, in the prompt or in a sent message, ignoring differences
+     * in whitespace. Uses `innerText` as `textContent` includes scripts, which can hold data from other chats.
+     */
+    internal fun pageShowsTextScript(text: String): String = script(
+        """
+        const collapse = s => s.replace(/\s+/g, ' ');
+        return { ok: true, value: collapse(document.body.innerText).includes(collapse(${js(text)})) };
+        """,
+    )
+
     /** Lists the names of the files attached to the prompt, including ones still uploading. */
     internal fun attachmentNamesScript(): String = script(
         """

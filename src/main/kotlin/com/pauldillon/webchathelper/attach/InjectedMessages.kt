@@ -28,4 +28,16 @@ class InjectedMessages {
         val expected = block + message
         block = if (newPrompt.startsWith(expected)) expected else ""
     }
+
+    companion object {
+        /** Tells ChatGPT what the attachments are (#I2K). */
+        const val PROJECT_CONTEXT =
+            "These files are from a software project I have open in my IDE. All paths are relative to the project root. " +
+                "These files provide a snapshot of a part or all of my project.  When uploading multiple files I may zip them first.  " +
+                "If I upload a file for the same path more than once, the most recently uploaded file replaces the previous file(s), " +
+                "thereby updating the snapshot.  I may also upload a diff, which also updates the snapshot."
+
+        /** [message] with [PROJECT_CONTEXT] ahead of it (#I2K). */
+        fun withProjectContext(message: String): String = "$PROJECT_CONTEXT\n\n$message"
+    }
 }

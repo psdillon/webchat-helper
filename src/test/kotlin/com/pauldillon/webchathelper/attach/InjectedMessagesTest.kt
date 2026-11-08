@@ -39,4 +39,14 @@ class InjectedMessagesTest {
         inject("", "a.kt attached\n\n")
         assertEquals("b.kt attached\n\n", inject("", "b.kt attached\n\n"))
     }
+
+    private val context = InjectedMessages.PROJECT_CONTEXT
+
+    @Test
+    fun projectContextComesFirstAndLaterMessagesFollowIt() { // #I2K
+        var prompt = "explain this"
+        prompt = inject(prompt, InjectedMessages.withProjectContext("a.kt attached\n\n"))
+        prompt = inject(prompt, "b.kt attached\n\n")
+        assertEquals("$context\n\na.kt attached\n\nb.kt attached\n\nexplain this", prompt)
+    }
 }

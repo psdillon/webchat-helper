@@ -82,6 +82,9 @@ class ChatGptBridge : Disposable {
     suspend fun deletePromptText(offset: Int, expected: String): Boolean =
         evaluateScript(ChatGptPage.deletePromptTextScript(offset, expected)).asBoolean
 
+    /** Whether [text] is shown on the page, in the prompt or in a sent message. */
+    suspend fun pageShowsText(text: String): Boolean = evaluateScript(ChatGptPage.pageShowsTextScript(text)).asBoolean
+
     /** The number of files attached to the prompt, including ones still uploading. */
     suspend fun countAttachments(): Int = attachmentNames().size
 

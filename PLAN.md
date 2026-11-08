@@ -74,15 +74,24 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 
 ### Phase 8 notes
 - Zips are written with the platform's `Compressor.Zip` (`FolderZip`, unit tested), each in its own folder from `FileUtil.createTempDirectory` so it can have the folder's name. Every included folder gets a folder entry, so empty folders are kept (#R58), including folders whose contents are all excluded. Excluded folders are left out.
-- For the project root, the zip and the prompt message use the root folder's name ("webchat-helper/ attached"), since its project-relative path is empty.
+- For the project root, the zip and the prompt message use the root folder's name ("`webchat-helper/` attached"), since its project-relative path is empty.
 - A zip counts as one file towards ChatGPT's per-message limit and is checked against the per-file size limit once written (#UP4). Every file in a zip is recorded as attached (#7P2).
 - Deleting zips after upload (#H4O): the page shows nothing the plugin can read that says an upload has finished, and deleting the file before ChatGPT has read it breaks the upload. So `TempUploads` checks the prompt's attachment list every 2 seconds and deletes a zip once it has left the list: the prompt was sent (ChatGPT only allows that once uploads have finished) or the user removed it. A zip that never appears within a minute is taken as refused by ChatGPT and deleted. Anything left is deleted when the project closes, and on IDE exit. Attachments are matched by name, allowing for ChatGPT's renaming of duplicates (`src.zip` shown as `src(1).zip`). Phase 9's diff files can use the same mechanism.
 
 ## Phase 9: Snapshots and incremental diffs
-- [ ] Per-conversation snapshot folder in the OS temp location, updated whenever a file is sent; deleted on IDE exit (#0RX, #H37, #5Z5, #62W, #BN4). New chats have no snapshot until they get an ID (#W3J).
-- [ ] When a folder would be zipped and the snapshot has files under it, attach a unified `.diff` file instead with the "changes to <path> since last attachment" message (#I81, #0Y9, #94Q).
-- [ ] Diff contents: compare against the snapshot; additions, modifications and deletions; excluded-but-existing files are not deletions (#D4X, #YN9, #7EX).
-- [ ] Update the snapshot after sending; inform the user and attach nothing when there are no changes (#0R9, #25L).
+- [x] Per-conversation snapshot folder in the OS temp location, updated whenever a file is sent; deleted on IDE exit (#0RX, #H37, #5Z5, #62W, #BN4). New chats have no snapshot until they get an ID (#W3J).
+- [x] When a folder would be zipped and the snapshot has files under it, attach a unified `.diff` file instead with the "`<path>/` diff attached (changes since last upload)" message (#I81, #0Y9, #94Q).
+- [x] Diff contents: compare against the snapshot; additions, modifications and deletions; excluded-but-existing files are not deletions (#D4X, #YN9, #7EX).
+- [x] Update the snapshot after sending; inform the user and attach nothing when there are no changes (#0R9, #25L).
+- [x] Tell ChatGPT what the attachments are the first time a file or zip is attached to a conversation (#I2K).
+
+### Phase 9 notes
+- Snapshots (`Snapshot`, `ConversationSnapshots`) are held by an application-level service, so they outlive a closed project until the IDE exits (#BN4). `FileUtil.createTempDirectory(..., deleteOnExit = true)` deletes the folder and its contents at exit through a shutdown hook. They are kept per project as well as per conversation, since their paths are relative to the project root.
+- "Sent" means attached: the snapshot is updated once the files are handed to ChatGPT's page (#62W, #0R9), so a file the user then removes from the prompt still counts as sent.
+- The diff (`UnifiedDiff`, `FolderDiff`) uses the platform's `Diff.buildChanges` for the line changes and writes plain unified diff hunks with 3 context lines. Paths have no `a/` and `b/` prefixes (#VV0); `/dev/null` is the missing side of an added or deleted file. Unit tested; the format was checked against GNU `diff` and `git apply -p0`.
+- Binary files (holding a NUL byte) appear as `Binary files X and Y differ`, as in `diff` and git, so their contents are not sent. The snapshot is still updated. The spec doesn't cover this case.
+- Open editors are saved before each attachment, as files are read from disk and a diff of unsaved edits would otherwise report no changes.
+- A diff file counts as one file towards ChatGPT's limits and is checked against the size limit once written (#UP4). Like a zip, it is deleted through `TempUploads` (#H4O). Every file in the folder is recorded as attached for matching responses (#7P2), not only the changed ones.
 
 ## Phase 10: Diffs of ChatGPT responses
 - [ ] Detect code blocks in ChatGPT responses and determine their file names; match to the most recently attached file with that name (#AD4, #Z98, #7P2).
@@ -92,5 +101,6 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 
 ## Open questions to raise when reached
 - Browser drawing glitches (found in Phase 7, deferred): parts of ChatGPT's page are drawn misaligned, and stray characters that aren't in the prompt can appear, after the browser loses focus or the plugin edits the prompt. Resizing the tool window fixes it, so the page itself is fine; it is the IDE's off-screen drawing of the browser, probably redrawing only changed areas at 150% display scaling, made worse by the sandbox's software rendering. To try: have the browser redraw its whole view (`CefBrowser.invalidate()`, or `wasResized`) after the plugin edits the page and when the browser loses focus; check whether it also happens in the normal IDE with GPU acceleration; otherwise report it to JetBrains.
+- Backticks in injected messages (#FYF, found in Phase 9, deferred until after the MVP): ChatGPT's prompt box doesn't style them as inline code, and pasted text has the same problem, though ChatGPT still receives the literal backticks. Probably its markdown shortcut only fires on the typed closing backtick (not tested). To try: insert each path up to its closing backtick, then insert that backtick separately. Styled text would probably lose its backticks in the prompt's text, so `InjectedMessages`, which finds earlier messages by their exact text, would need reworking.
 - The Phase 5 spike may change the approach for file upload.
 - Phase 10: how the file name for a response code block is determined (code block header, nearby text, or another heuristic). The spec defines the match rule but not how the name is found.

@@ -35,6 +35,7 @@ In this document:
   * Note: a separate cookie store at a configurable location was dropped. The JCEF API in IntelliJ 2026.3 does not let a plugin give its browser its own storage location: `CefRequestContext.createContext` takes no settings, `JBCefBrowserBuilder` cannot set a request context, and CEF requires a request context's cache path to be inside the global one. The only alternative is moving the storage for the whole IDE.
   * Note: a reverse proxy between the browser and ChatGPT could protect the session cookie by holding it itself, so it is never stored by the browser.
 * All paths shown to ChatGPT or stored in zips or diff files are relative to the project root. #VV0
+* All paths and file names injected into the prompt are surrounded by backticks. #FYF
 
 ### File Uploads #7HS
 * The plugin will have a configurable list of glob paths for files that it should not send to chatgpt, using the same format as a .gitignore file. #AN7
@@ -51,8 +52,8 @@ In this document:
   * Whether a single file/folder or multiple files/folders can be selected will be configurable in settings, defaulting to multiple. #0AJ
   * Whether folders are always shown, or only shown when the search text ends with '/' (the default GotoFileModel behaviour), will be configurable in settings. #4QH
 * A button under the JCEF will allow selection of multiple files/folders using the standard FileChooser + FileChooserDescriptor approach. #Z7H
-* For each file added, the text "<file path> attached<linebreak><linebreak>" is to be injected into the prompt. #C5S
-* If the user attempts to attach a folder of more than 3 files, the folder will be attached as a zip and the text "<path>/ attached<linebreak><linebreak>" will be injected into the prompt, otherwise the files within the folder will be attached as individual files with the appropriate message injected into the prompt. #Q18
+* For each file added, the text "`<file path>` attached<linebreak><linebreak>" is to be injected into the prompt. #C5S
+* If the user attempts to attach a folder of more than 3 files, the folder will be attached as a zip and the text "`<path>/` attached<linebreak><linebreak>" will be injected into the prompt, otherwise the files within the folder will be attached as individual files with the appropriate message injected into the prompt. #Q18
   * Files are counted after exclusions have been applied.  Folders are not counted. #XI4
   * Empty folders are included in the zip. #R58
   * The zip is named after the selected folder.  If the selected folder is the project root, the zip is named after the project root folder. #01S
@@ -63,7 +64,7 @@ In this document:
   * Whenever a file is sent (individually, in a zip or in a diff), its copy in the conversation's snapshot folder is updated. #62W
   * A conversation is identified by the ID in its ChatGPT address. A new chat has no ID until its first message is sent, and has no snapshot folder until then: files sent before the ID appears are not added to any snapshot, so a folder attached in a new chat is always attached as a zip, and a later diff in that conversation includes those files as additions. #W3J
     * Note: this avoids having to tell a new chat being given its ID apart from the user opening another chat, which look the same to the plugin (both are a change from a page with no ID to one with an ID). Getting that wrong would give a conversation a snapshot of files it never received, and so diffs against them.
-* If a folder that would be attached as a zip contains any files that are in the conversation's snapshot folder, a diff file will be attached instead of the zip, and the text "changes to <path> since last attachment<linebreak><linebreak>" will be injected into the prompt. #I81
+* If a folder that would be attached as a zip contains any files that are in the conversation's snapshot folder, a diff file will be attached instead of the zip, and the text "`<path>/` diff attached (changes since last upload)<linebreak><linebreak>" will be injected into the prompt. #I81
   * The diff file is a unified diff file (`.diff`), not a patch file (e.g. not `git format-patch` output). #0Y9
   * The diff compares the folder's current files (after exclusions) against the snapshot folder's files under the same path. #D4X
   * Files that are not in the snapshot folder are included in the diff as additions. #YN9
@@ -80,8 +81,10 @@ In this document:
   * Each subsequent message is injected directly after the previously injected messages. #R1F
   * If the previously injected messages have been modified, the new message is injected at the start of the prompt. #8K9
   * The trailing blank line of each message separates it from the next message. #4UZ
+* The first time a file or zip is attached to a conversation, the following text and a blank line are injected at the start of the prompt, ahead of the attachment's message: "These files are from a software project I have open in my IDE. All paths are relative to the project root. These files provide a snapshot of a part or all of my project.  When uploading multiple files I may zip them first.  If I upload a file for the same path more than once, the most recently uploaded file replaces the previous file(s), thereby updating the snapshot.  I may also upload a diff, which also updates the snapshot." #I2K
+  * Note: the first time is when the conversation has no files in its snapshot folder and the text is not shown on the page, in the prompt or in a sent message. The page has to be checked because files sent before a chat has an ID are not in its snapshot (#W3J).
 * If an attachment would exceed ChatGPT's file count or file size limits, the attachment is stopped and the user is informed. #UP4
-* ChatGPT does not accept empty files, so an empty file that would be attached as an individual file (whether selected directly or from a folder) is not attached, no "<file path> attached" text is injected for it, and the user is informed.  Other files in the same attachment are still attached.  Empty files in a zip are included in the zip as normal. #E0Z
+* ChatGPT does not accept empty files, so an empty file that would be attached as an individual file (whether selected directly or from a folder) is not attached, no "`<file path>` attached" text is injected for it, and the user is informed.  Other files in the same attachment are still attached.  Empty files in a zip are included in the zip as normal. #E0Z
 
 ### Diffs of Files Provided by ChatGPT #GD3
 * If a chatgpt response contains a file or file snippet that matches a project file, a button will be added within ChatGPT's page to open a diff window against the matching project file. #AD4

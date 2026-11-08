@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import java.nio.file.Path
 
 /**
- * Temporary files made only to be uploaded to ChatGPT: folder zips, and later diff files (#T10).
+ * Temporary files made only to be uploaded to ChatGPT: folder zips and diff files (#T10).
  *
  * Each file is made in its own folder in the OS's temp location (#MM4), so it can have the name ChatGPT
  * should see. Once uploaded, the file is deleted when it is no longer in the prompt's attachment list
