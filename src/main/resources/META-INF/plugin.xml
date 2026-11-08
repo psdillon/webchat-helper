@@ -25,10 +25,16 @@
                     anchor="right"
                     icon="/icons/webChatToolWindow.svg"
                     factoryClass="com.pauldillon.webchathelper.toolwindow.WebChatToolWindowFactory"/>
+
+        <!-- #X4G, #Y0G: application-level settings, shown under Tools in the Settings dialog. -->
+        <applicationConfigurable parentId="tools"
+                                 id="com.pauldillon.webchathelper.settings"
+                                 displayName="WebChatHelper"
+                                 instance="com.pauldillon.webchathelper.settings.WebChatHelperConfigurable"/>
     </extensions>
 
     <actions>
-        <!-- Button row under the browser; the attach (#Z7H) and settings (#7IO) actions are added here. -->
+        <!-- Button row under the browser; the attach action (#Z7H) is added here. -->
         <group id="WebChatHelper.BrowserToolbar">
             <!-- #K2W -->
             <action id="WebChatHelper.ReloadBrowser"
@@ -42,6 +48,13 @@
                     text="ChatGPT Start Page"
                     description="Go back to the ChatGPT start page"
                     icon="AllIcons.Nodes.HomeFolder"/>
+            <separator/>
+            <!-- #7IO -->
+            <action id="WebChatHelper.OpenSettings"
+                    class="com.pauldillon.webchathelper.toolwindow.OpenSettingsAction"
+                    text="WebChatHelper Settings"
+                    description="Open the WebChatHelper settings page"
+                    icon="AllIcons.General.Settings"/>
         </group>
     </actions>
 </idea-plugin>

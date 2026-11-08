@@ -20,8 +20,8 @@ import javax.swing.JPanel
 
 /**
  * Tool window content: the ChatGPT browser (#R4F) with a button row underneath it.
- * The row shows the actions in [TOOLBAR_GROUP_ID]: reload (#K2W), home (#W4R), and later attach (#Z7H)
- * and settings (#7IO).
+ * The row shows the actions in [TOOLBAR_GROUP_ID]: reload (#K2W), home (#W4R), settings (#7IO),
+ * and later attach (#Z7H).
  */
 class WebChatPanel(val project: Project) : JPanel(BorderLayout()), Disposable, UiDataProvider {
 

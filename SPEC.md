@@ -29,8 +29,11 @@ In this document:
 * The plugin's UI will be a tool window anchored on the right side of the IDE, following the convention of other AI tools. #0E6
 * A button under the JCEF will reload ChatGPT by recreating the browser and reopening the page it was showing, so the page can be recovered after the IDE restarts its embedded browser (e.g. after GPU process crashes). #K2W
 * A button under the JCEF, next to the reload button, will take the browser back to the ChatGPT start page. #W4R
-* The ChatGPT login will persist across IDE restarts using a cookie store. #E65
-  * The cookie store location will be configurable in settings, defaulting to `~/.webchat-helper-cookiestore`. #9FS
+* The ChatGPT login will persist across IDE restarts using the IDE's shared JCEF browser storage (the `jcef_cache` folder in the IDE's system folder), which embedded browsers use by default. #E65
+  * Note: this storage holds the ChatGPT session cookie and cached page data, which may include fragments of chats. It is shared with the IDE's other embedded browsers, readable by anything running as the user (including other plugins), and not encrypted by the plugin.
+  * Note: the IDE's system folder is per IDE version, so the login is not carried over when the IDE is upgraded, and the old version's `jcef_cache` (with its cookies) is left behind.
+  * Note: a separate cookie store at a configurable location was dropped. The JCEF API in IntelliJ 2026.3 does not let a plugin give its browser its own storage location: `CefRequestContext.createContext` takes no settings, `JBCefBrowserBuilder` cannot set a request context, and CEF requires a request context's cache path to be inside the global one. The only alternative is moving the storage for the whole IDE.
+  * Note: a reverse proxy between the browser and ChatGPT could protect the session cookie by holding it itself, so it is never stored by the browser.
 * All paths shown to ChatGPT or stored in zips or diff files are relative to the project root. #VV0
 
 ### File Uploads #7HS
@@ -45,7 +48,7 @@ In this document:
   * Drags are accepted from both the IntelliJ Project view and the OS file explorer. #9T1
 * When typing into the prompt, when the '@' character is entered at the start of the prompt or after whitespace (including a linebreak), a file/folder selection dialog will be opened using the ChooseByNamePopup + GotoFileModel approach.  If files/folders are selected, they will be attached to the prompt and the '@' will be removed from the prompt. #B11
   * If the dialog is cancelled, nothing is attached and the '@' remains in the prompt. #O2S
-  * Whether a single file/folder or multiple files/folders can be selected will be configurable in settings. #0AJ
+  * Whether a single file/folder or multiple files/folders can be selected will be configurable in settings, defaulting to multiple. #0AJ
   * Whether folders are always shown, or only shown when the search text ends with '/' (the default GotoFileModel behaviour), will be configurable in settings. #4QH
 * A button under the JCEF will allow selection of multiple files/folders using the standard FileChooser + FileChooserDescriptor approach. #Z7H
 * For each file added, the text "<file path> attached<linebreak><linebreak>" is to be injected into the prompt. #C5S
@@ -93,6 +96,5 @@ In this document:
 * A button under the JCEF will open the plugin's settings page. #7IO
 * The settings will include: #CL0
   * The exclusion glob list. #8LI
-  * The cookie store location. #7FX
   * Single or multiple selection in the '@' file/folder selection dialog. #T48
   * Whether folders are always shown in the '@' file/folder selection dialog. #N67

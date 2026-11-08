@@ -17,13 +17,12 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - [x] Disable JCEF GPU acceleration for sandbox (`runIde`) runs; the dev machine's GPU process crashes.
 
 ## Phase 3: Settings
-- [ ] Application-level `PersistentStateComponent` and `Configurable` page in the IDE Settings dialog (#X4G, #Y0G).
-- [ ] Settings fields: exclusion globs with defaults (#8LI, #CI3), cookie store location (#7FX, #9FS), '@' multi-select (#T48, #0AJ), '@' always-show-folders (#N67, #4QH).
-- [ ] Settings button under the browser opens the page (#7IO).
+- [x] Application-level `PersistentStateComponent` and `Configurable` page in the IDE Settings dialog (#X4G, #Y0G).
+- [x] Settings fields: exclusion globs with defaults (#8LI, #CI3), '@' multi-select (#T48, #0AJ), '@' always-show-folders (#N67, #4QH).
+- [x] Settings button under the browser opens the page (#7IO).
 
-## Phase 4: Login persistence (spike first)
-- [ ] Spike: confirm how to give the JCEF browser a persistent cookie store at a configurable path (e.g. a `CefRequestContext` with its own cache path vs. app-wide JCEF settings). Report findings before building on it.
-- [ ] Persist the ChatGPT login in the cookie store across IDE restarts (#E65, #9FS).
+## Phase 4: Login persistence
+- [x] The ChatGPT login persists across IDE restarts in the IDE's shared JCEF storage, with no plugin code needed (#E65). A configurable cookie store was dropped: the JCEF API does not allow a per-browser storage location (see the notes under #E65 in `SPEC.md`).
 
 ## Phase 5: ChatGPT page bridge (spike first)
 - [ ] Spike: prove programmatic file upload into ChatGPT's prompt (e.g. CDP `DOM.setFileInputFiles` vs. a synthetic drop event). Report findings before building on it.
@@ -63,6 +62,6 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - [ ] Intercept zip downloads from responses (`CefDownloadHandler`), add a diff button, and diff zip entries against project files by project-relative path, skipping unmatched files (#0RY, #15X, #F3R).
 
 ## Open questions to raise when reached
-- Phase 4 and 5 spikes may change the approach for cookie storage and file upload.
+- The Phase 5 spike may change the approach for file upload.
 - Phase 9: how a new chat without a conversation ID maps to a snapshot folder once ChatGPT assigns one.
 - Phase 10: how the file name for a response code block is determined (code block header, nearby text, or another heuristic). The spec defines the match rule but not how the name is found.

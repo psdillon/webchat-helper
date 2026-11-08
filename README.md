@@ -2,6 +2,23 @@
 
 An IntelliJ Platform plugin that runs the ChatGPT web UI in a tool window on the right of the IDE and automates attaching project files and diffing ChatGPT's responses. See `SPEC.md` for the requirements and `PLAN.md` for implementation progress.
 
+## ChatGPT login and privacy
+
+The plugin keeps you logged in to ChatGPT the same way the IDE's other embedded browsers keep their state: in the IDE's shared browser storage, the `jcef_cache` folder in the IDE's system folder. On Windows that is `%LOCALAPPDATA%\JetBrains\IntelliJIdea2026.3\jcef_cache` for IntelliJ IDEA 2026.3.
+
+Things to know, because chats can contain sensitive information:
+
+- The folder holds the ChatGPT session cookie, which gives access to your whole ChatGPT account including chat history, and cached page data, which may include fragments of chats.
+- It is shared with the IDE's other embedded browsers and readable by anything running as your user, including other IDE plugins. The plugin does not encrypt it.
+- Each IDE version has its own system folder, so you log in again after upgrading the IDE, and the old version's `jcef_cache` is left behind with its cookies. Delete old ones you no longer need.
+- To log out, use ChatGPT's own log out. To remove everything, close the IDE and delete the `jcef_cache` folder. This also clears the IDE's other embedded browsers, for example:
+
+```bash
+rm -rf "$LOCALAPPDATA/JetBrains/IntelliJIdea2026.3/jcef_cache"
+```
+
+A separate cookie store at a location you choose is not possible: IntelliJ's JCEF API does not let a plugin give its browser its own storage folder, only move the storage for the whole IDE. A reverse proxy between the browser and ChatGPT could protect the session cookie by holding it itself, so the browser never stores it, but the plugin does not do this.
+
 ## Development
 
 ### Prerequisites
@@ -35,6 +52,7 @@ Notes:
 - Restarting from inside the sandbox (for example after changing plugins) does not restart the sandbox: it closes it and opens your normal IntelliJ instead. Run `runIde` again.
 - GPU acceleration of the embedded browser is turned off for sandbox runs, because the GPU process crashes on this machine ("Too many restarts of the GPU process").
 - The sandbox log is `.intellijPlatform/sandbox/webchat-helper/IU-2026.3/log_runIde/idea.log`.
+- The sandbox's ChatGPT login is kept in `.intellijPlatform/sandbox/webchat-helper/IU-2026.3/system_runIde/jcef_cache/`, separate from your normal IDE's.
 
 ### Inspect the embedded browser
 
