@@ -42,15 +42,21 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - The DevTools protocol's `Runtime.evaluate` is used for plugin-to-page calls that return results, so `JBCefJSQuery` is only used for page-to-plugin events.
 
 ## Phase 6: Attachment core
-- [ ] Exclusion matching with .gitignore-format globs relative to the project root (#AN7, #8BN), ignoring project .gitignore files (#2C0).
-- [ ] Explicitly attached files bypass exclusions; files inside attached folders do not (#O8Y, #AV2).
-- [ ] Attach a single file and inject "<file path> attached" with a project-relative path (#C5S, #VV0).
-- [ ] Message ordering: first at start, subsequent after previous injections, fallback to start if previous injections were modified (#25C, #9N6, #R1F, #8K9, #4UZ).
-- [ ] Track attached files in memory for diff matching (#3JG, #7P2).
-- [ ] Stop and inform the user when ChatGPT's file count or size limits would be exceeded (#UP4).
+- [x] Exclusion matching with .gitignore-format globs relative to the project root (#AN7, #8BN), ignoring project .gitignore files (#2C0).
+- [x] Explicitly attached files bypass exclusions; files inside attached folders do not (#O8Y, #AV2).
+- [x] Attach a single file and inject "<file path> attached" with a project-relative path (#C5S, #VV0).
+- [x] Message ordering: first at start, subsequent after previous injections, fallback to start if previous injections were modified (#25C, #9N6, #R1F, #8K9, #4UZ).
+- [x] Track attached files in memory for diff matching (#3JG, #7P2).
+- [x] Stop and inform the user when ChatGPT's file count or size limits would be exceeded (#UP4).
+
+### Phase 6 notes
+- The attach button (#Z7H, from Phase 7) was built here so attachments can be tried in the sandbox. Folders of 3 files or fewer are attached as individual files; larger folders are refused with a "not supported yet" message until Phase 8 adds zips.
+- An attachment request (all the files and folders chosen at once) is checked as a whole before anything is sent; if any part can't be attached, nothing is. The exception is empty files attached individually, which ChatGPT refuses: they are left out with a warning and the rest is attached (#E0Z).
+- Limits (#UP4): 20 files per message (raised from 10 in February 2026) and 512 MB per file, held in `ChatGptPage`. The files already in the prompt are counted from ChatGPT's attachment list. ChatGPT's rolling upload cap (80 files every 3 hours on paid plans) can't be seen from the page and is left to ChatGPT.
+- Exclusion matching (`ExclusionMatcher`) is unit tested (`./gradlew test`), as is message ordering (`InjectedMessages`).
 
 ## Phase 7: Attachment entry points
-- [ ] Attach button using `FileChooser` with a multi-select file/folder descriptor (#Z7H).
+- [x] Attach button using `FileChooser` with a multi-select file/folder descriptor (#Z7H). Done in Phase 6.
 - [ ] Drag and drop from the Project view and the OS file explorer, routed through the plugin's handling instead of ChatGPT's (#LI7, #5PD, #9T1).
 - [ ] '@' trigger at prompt start or after whitespace, opening `ChooseByNamePopup` + `GotoFileModel`; remove '@' on selection, keep it on cancel; honour the two '@' settings (#B11, #O2S, #0AJ, #4QH).
 

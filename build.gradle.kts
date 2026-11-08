@@ -20,6 +20,8 @@ dependencies {
         // JCEF (JBCefBrowser etc.) is a separate bundled plugin since build 263 (#R4F).
         bundledPlugin("com.intellij.modules.jcef")
     }
+    // Plain unit tests of logic that doesn't need the IDE running.
+    testImplementation("junit:junit:4.13.2")
 }
 
 tasks.runIde {

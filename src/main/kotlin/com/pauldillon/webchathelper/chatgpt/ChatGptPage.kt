@@ -14,6 +14,9 @@ import com.google.gson.Gson
  *   an empty `<p>`. So the prompt's text is the paragraphs' text joined with linebreaks.
  * - The form has several hidden file inputs; the general one ("Add files") is the one with
  *   `multiple` and no `accept` filter. The others only take images or video.
+ * - Attached files are listed in the form's `[data-composer-attachments]` element (present but hidden
+ *   when there are none). Each has a button labelled "Remove <file name>", which assumes ChatGPT's
+ *   English UI.
  * - Conversation pages are `/c/<id>`, or `/g/<gpt or project>/c/<id>` for chats in a project or
  *   custom GPT. A new chat has no ID until its first message is sent.
  */
@@ -24,10 +27,23 @@ object ChatGptPage {
     private const val COMPOSER_SELECTOR = "form[data-chatgpt-composer]"
     private const val PROMPT_EDITOR_SELECTOR = "$COMPOSER_SELECTOR .ProseMirror[contenteditable='true']"
     private const val FILE_INPUT_SELECTOR = "$COMPOSER_SELECTOR input[type='file'][multiple]"
+    private const val ATTACHMENT_LIST_SELECTOR = "$COMPOSER_SELECTOR [data-composer-attachments]"
+    /** Each attached file's "Remove <file name>" button; one per attachment, whatever its type. */
+    private const val ATTACHMENT_REMOVE_BUTTON_SELECTOR = "button[aria-label^='Remove ']"
+
+    /**
+     * Most files ChatGPT accepts in one message (#UP4). Raised from 10 to 20 on the web in February 2026
+     * (ChatGPT release notes, 13 February 2026).
+     */
+    const val MAX_FILES_PER_MESSAGE = 20
+
+    /** Largest file ChatGPT accepts, in bytes (#UP4); from OpenAI's "File Uploads FAQ". */
+    const val MAX_FILE_SIZE = 512L * 1024 * 1024
 
     /** Names of page parts, used in the error shown when a selector stops matching. */
     const val PART_PROMPT_BOX = "prompt box"
     const val PART_FILE_UPLOAD = "file upload"
+    const val PART_ATTACHMENT_LIST = "list of attached files"
 
     // Declared before the scripts below, which use it while the object initialises.
     private val gson = Gson()
@@ -126,6 +142,15 @@ object ChatGptPage {
         });
         await sleep(0);
         return { ok: true, value: promptText(ed) };
+        """,
+    )
+
+    /** Counts the files attached to the prompt. */
+    internal fun countAttachmentsScript(): String = script(
+        """
+        const list = document.querySelector(${js(ATTACHMENT_LIST_SELECTOR)});
+        if (!list) return { missing: ${js(PART_ATTACHMENT_LIST)} };
+        return { ok: true, value: list.querySelectorAll(${js(ATTACHMENT_REMOVE_BUTTON_SELECTOR)}).length };
         """,
     )
 

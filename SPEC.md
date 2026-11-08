@@ -78,6 +78,7 @@ In this document:
   * If the previously injected messages have been modified, the new message is injected at the start of the prompt. #8K9
   * The trailing blank line of each message separates it from the next message. #4UZ
 * If an attachment would exceed ChatGPT's file count or file size limits, the attachment is stopped and the user is informed. #UP4
+* ChatGPT does not accept empty files, so an empty file that would be attached as an individual file (whether selected directly or from a folder) is not attached, no "<file path> attached" text is injected for it, and the user is informed.  Other files in the same attachment are still attached.  Empty files in a zip are included in the zip as normal. #E0Z
 
 ### Diffs of Files Provided by ChatGPT #GD3
 * If a chatgpt response contains a file or file snippet that matches a project file, a button will be added within ChatGPT's page to open a diff window against the matching project file. #AD4

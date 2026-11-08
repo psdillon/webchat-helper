@@ -37,8 +37,15 @@
     </extensions>
 
     <actions>
-        <!-- Button row under the browser; the attach action (#Z7H) is added here. -->
+        <!-- Button row under the browser. -->
         <group id="WebChatHelper.BrowserToolbar">
+            <!-- #Z7H -->
+            <action id="WebChatHelper.AttachFiles"
+                    class="com.pauldillon.webchathelper.toolwindow.AttachFilesAction"
+                    text="Attach Files"
+                    description="Attach project files and folders to the ChatGPT prompt"
+                    icon="AllIcons.Actions.Attach"/>
+            <separator/>
             <!-- #K2W -->
             <action id="WebChatHelper.ReloadBrowser"
                     class="com.pauldillon.webchathelper.toolwindow.ReloadBrowserAction"

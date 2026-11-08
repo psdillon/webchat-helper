@@ -11,6 +11,9 @@ object WebChatNotifications {
     /** Tells the user something didn't work, for example a [com.pauldillon.webchathelper.chatgpt.ChatGptPageException]. */
     fun error(project: Project?, message: String) = notify(project, message, NotificationType.ERROR)
 
+    /** Tells the user that something they asked for was not done, and why, e.g. an attachment over ChatGPT's limits. */
+    fun warning(project: Project?, message: String) = notify(project, message, NotificationType.WARNING)
+
     private fun notify(project: Project?, message: String, type: NotificationType) {
         NotificationGroupManager.getInstance().getNotificationGroup(GROUP_ID)
             .createNotification("WebChatHelper", message, type)

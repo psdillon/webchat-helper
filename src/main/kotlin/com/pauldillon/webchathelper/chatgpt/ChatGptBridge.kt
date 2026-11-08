@@ -75,6 +75,9 @@ class ChatGptBridge : Disposable {
     suspend fun insertPromptText(offset: Int, text: String): String =
         evaluateScript(ChatGptPage.insertPromptTextScript(offset, text)).asString
 
+    /** The number of files attached to the prompt, including ones still uploading. */
+    suspend fun countAttachments(): Int = evaluateScript(ChatGptPage.countAttachmentsScript()).asInt
+
     /**
      * Attaches [files] to the prompt, as if the user had chosen them in ChatGPT's "Add files" dialog.
      * ChatGPT starts uploading them straight away.
