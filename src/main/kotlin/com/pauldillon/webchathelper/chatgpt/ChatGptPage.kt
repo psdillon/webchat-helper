@@ -28,7 +28,9 @@ import com.google.gson.Gson
  *   clicked with real mouse input. A zip then downloads, but a text file opens in a side panel,
  *   `[data-app-shell-focus-area='right-panel']`, with buttons labelled "Download" and "Close viewer", which
  *   assumes ChatGPT's English UI. Either way ChatGPT downloads the file by creating a `blob:` address and
- *   clicking a temporary `<a download>`.
+ *   clicking a temporary `<a download>`. The link's text needn't include the file's name ("Download patch"),
+ *   but the React props of one of its ancestors have `reference.source_content_references`, a list with the
+ *   `file_name` and markdown (`matched_text`) of each file link in the response.
  */
 object ChatGptPage {
     /** Page loaded into the tool window's browser (#R4F). */
@@ -204,13 +206,25 @@ object ChatGptPage {
           const name = pathIn(lastLine(before)) || lastAttachedName(before) || (comment && (pathIn(comment[1]) || lastAttachedName(comment[1])));
           return name ? { kind: ${js(KIND_FILE)}, name } : null;
         };
+        const realFileName = link => {
+          const key = Object.keys(link).find(k => k.startsWith('__reactFiber'));
+          for (let fiber = key && link[key]; fiber; fiber = fiber.return) {
+            const reference = fiber.memoizedProps && fiber.memoizedProps.reference;
+            if (!reference || !Array.isArray(reference.source_content_references)) continue;
+            const markdown = '[' + link.innerText.trim() + '](';
+            const matches = reference.source_content_references.filter(r => r.file_name && r.matched_text && r.matched_text.startsWith(markdown));
+            return matches.length === 1 ? matches[0].file_name : '';
+          }
+          return '';
+        };
         const linkFile = (link, response) => {
-          const names = baseNames(link.innerText), named = pattern => names.find(name => pattern.test(name));
+          const linkText = link.innerText + ' ' + realFileName(link); // last, so the real name is found first
+          const names = baseNames(linkText), named = pattern => names.find(name => pattern.test(name));
           const patch = named(/\.(?:diff|patch)$/i), zip = named(/\.zip$/i);
           if (patch) return { kind: ${js(KIND_PATCH)}, name: patch };
           if (zip) return { kind: ${js(KIND_ZIP)}, name: zip };
           const before = textBefore(link, response);
-          const name = pathIn(lastLine(before)) || lastAttachedName(link.innerText) || lastAttachedName(before);
+          const name = pathIn(lastLine(before)) || lastAttachedName(linkText) || lastAttachedName(before);
           return name ? { kind: ${js(KIND_FILE)}, name } : null;
         };
         const actionButtons = post => {

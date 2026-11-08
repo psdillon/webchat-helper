@@ -114,6 +114,7 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - Patches follow the platform's patch classes (`PatchReader`, `GenericPatchApplier`) and are worked out in memory from the editors' text (`ResponsePatch`, unit tested). All the files are worked out before any is changed, so a patch that doesn't fit changes nothing. Applied changes go through documents where the file has one, so they keep the file's line separators.
 - A zip is compared as a folder with the project root in the platform's folder diff. `DirDiffSettings` on the request chain leaves out project files the zip doesn't have, while files that are new in the zip are included (#F3R). Entries that could point outside the unpacked folder (`..`, absolute paths) are skipped (`ResponseZip`, unit tested). The unpacked folder is kept until the IDE exits, as the diff window reads it while open.
 - While ChatGPT writes a response, the response's `[data-dil-response]` element has a `data-d-streaming-reveal` attribute, which it removes at the end (recorded from a real response). The page script watches for that change, as removing an attribute isn't otherwise a change it sees.
+- A download link's text may not include the file's name ("Download patch"), so the page script reads the real name from the response's React props and falls back to the link's text if they change.
 - If the page has visible code the selectors don't recognise, the user is warned once per page load.
 
 ## Open questions to raise when reached
