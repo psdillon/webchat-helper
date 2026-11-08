@@ -45,6 +45,12 @@ object ChatGptPage {
     const val PART_FILE_UPLOAD = "file upload"
     const val PART_ATTACHMENT_LIST = "list of attached files"
 
+    /**
+     * Page event posted when '@' is typed into the prompt box: `{ prompt, offset }`, the prompt's text and
+     * the '@''s character offset in it. The plugin decides whether to open the file dialog (#B11).
+     */
+    const val EVENT_AT_TYPED = "atTyped"
+
     // Declared before the scripts below, which use it while the object initialises.
     private val gson = Gson()
 
@@ -63,16 +69,31 @@ object ChatGptPage {
      * Installs `window.__webChatHelper.post(type, data)` in the page, which sends an event to the plugin.
      * [sendRequest] is the JavaScript call made with the JSON request in a variable named `request`
      * (from `JBCefJSQuery.inject("request")`).
+     *
+     * Also posts [EVENT_AT_TYPED] when '@' is typed into the prompt box (#B11). Only typing counts
+     * (`insertText` of the single character '@'), not pasting or the plugin's own insertions. The listener
+     * is on the document, so it keeps working when ChatGPT replaces the prompt box.
      */
     internal fun installBridgeScript(sendRequest: String): String = """
         (() => {
           if (window.__webChatHelper) return;
+          $prelude
           window.__webChatHelper = {
             post(type, data) {
               const request = JSON.stringify({ type: type, data: data === undefined ? null : data });
               $sendRequest;
             }
           };
+          document.addEventListener('input', e => {
+            if (e.inputType !== 'insertText' || e.data !== '@') return;
+            const ed = editor();
+            if (!ed || !ed.contains(e.target)) return;
+            const selection = getSelection();
+            if (!selection.rangeCount || !selection.isCollapsed) return;
+            const caret = offsetOf(ed, selection.focusNode, selection.focusOffset);
+            if (caret < 1) return;
+            window.__webChatHelper.post(${js(EVENT_AT_TYPED)}, { prompt: promptText(ed), offset: caret - 1 });
+          }, true);
           window.__webChatHelper.post('bridgeReady', { url: location.href });
         })();
     """.trimIndent()
@@ -86,6 +107,46 @@ object ChatGptPage {
         const editor = () => document.querySelector(${js(PROMPT_EDITOR_SELECTOR)});
         const fileInput = () => [...document.querySelectorAll(${js(FILE_INPUT_SELECTOR)})].find(i => !i.accept);
         const promptText = ed => [...ed.children].map(b => b.textContent).join('\n');
+        // The DOM position ({ node, offset }) of a character offset in promptText(ed), or null if past the end.
+        const positionOf = (ed, offset) => {
+          let column = offset;
+          for (const b of ed.children) {
+            const length = b.textContent.length;
+            if (column > length) { column -= length + 1; continue; }
+            if (column === 0) return { node: b, offset: 0 };
+            const walker = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+            for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+              if (column <= t.length) return { node: t, offset: column };
+              column -= t.length;
+            }
+          }
+          return null;
+        };
+        // The character offset in promptText(ed) of a DOM position, or -1 if it isn't inside a line.
+        const offsetOf = (ed, node, nodeOffset) => {
+          let offset = 0;
+          for (const b of ed.children) {
+            if (b.contains(node)) {
+              const range = document.createRange();
+              range.selectNodeContents(b);
+              range.setEnd(node, nodeOffset);
+              return offset + range.toString().length;
+            }
+            offset += b.textContent.length + 1;
+          }
+          return -1;
+        };
+        // Selects from start to end (positions from positionOf) in the prompt box.
+        const select = async (ed, start, end) => {
+          ed.focus();
+          const range = document.createRange();
+          range.setStart(start.node, start.offset);
+          range.setEnd(end.node, end.offset);
+          const selection = getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          await sleep(0); // let ProseMirror pick up the new selection
+        };
     """.trimIndent()
 
     /** Reads the prompt's text, with a linebreak between lines. */
@@ -110,38 +171,34 @@ object ChatGptPage {
         const ed = editor();
         if (!ed) return { missing: ${js(PART_PROMPT_BOX)} };
         const offset = $offset, text = ${js(text)};
-        // Find the line (top-level block) and column for the offset.
-        let block = null, column = offset;
-        for (const b of ed.children) {
-          const length = b.textContent.length;
-          if (column <= length) { block = b; break; }
-          column -= length + 1;
-        }
-        if (!block) return { error: 'offset ' + offset + ' is past the end of the prompt' };
-        // Find the text node and position within it for the column.
-        let node = block, nodeOffset = 0;
-        if (column > 0) {
-          const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
-          let remaining = column;
-          for (let t = walker.nextNode(); t; t = walker.nextNode()) {
-            if (remaining <= t.length) { node = t; nodeOffset = remaining; break; }
-            remaining -= t.length;
-          }
-        }
-        ed.focus();
-        const range = document.createRange();
-        range.setStart(node, nodeOffset);
-        range.collapse(true);
-        const selection = getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        await sleep(0); // let ProseMirror pick up the new selection
+        const at = positionOf(ed, offset);
+        if (!at) return { error: 'offset ' + offset + ' is past the end of the prompt' };
+        await select(ed, at, at);
         text.split('\n').forEach((line, i) => {
           if (i > 0) document.execCommand('insertParagraph');
           if (line) document.execCommand('insertText', false, line);
         });
         await sleep(0);
         return { ok: true, value: promptText(ed) };
+        """,
+    )
+
+    /**
+     * Deletes [expected] from the prompt at character [offset] of the prompt's text, if that is what is
+     * there, and returns whether it was deleted.
+     */
+    internal fun deletePromptTextScript(offset: Int, expected: String): String = script(
+        """
+        const ed = editor();
+        if (!ed) return { missing: ${js(PART_PROMPT_BOX)} };
+        const offset = $offset, expected = ${js(expected)};
+        if (promptText(ed).substr(offset, expected.length) !== expected) return { ok: true, value: false };
+        const start = positionOf(ed, offset), end = positionOf(ed, offset + expected.length);
+        if (!start || !end) return { ok: true, value: false };
+        await select(ed, start, end);
+        document.execCommand('delete');
+        await sleep(0);
+        return { ok: true, value: true };
         """,
     )
 

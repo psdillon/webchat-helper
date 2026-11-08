@@ -57,8 +57,15 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 
 ## Phase 7: Attachment entry points
 - [x] Attach button using `FileChooser` with a multi-select file/folder descriptor (#Z7H). Done in Phase 6.
-- [ ] Drag and drop from the Project view and the OS file explorer, routed through the plugin's handling instead of ChatGPT's (#LI7, #5PD, #9T1).
-- [ ] '@' trigger at prompt start or after whitespace, opening `ChooseByNamePopup` + `GotoFileModel`; remove '@' on selection, keep it on cancel; honour the two '@' settings (#B11, #O2S, #0AJ, #4QH).
+- [x] Drag and drop from the Project view and the OS file explorer, routed through the plugin's handling instead of ChatGPT's (#LI7, #5PD, #9T1).
+- [x] '@' trigger at prompt start or after whitespace, opening `ChooseByNamePopup` + `GotoFileModel`; remove '@' on selection, keep it on cancel; honour the two '@' settings (#B11, #O2S, #0AJ, #4QH).
+
+### Phase 7 notes
+- Drag and drop: the IDE runs JCEF out-of-process with off-screen rendering, and the browser's Swing component has no drop handling of its own, so drops never reach ChatGPT's page. A Swing `TransferHandler` (`AttachDropHandler`) on the tool window panel receives drops anywhere in the tool window, browser included. The Project view and the OS file explorer both offer a file list (`FileCopyPasteUtil`). Drops are always accepted as copies, so the drag source never deletes the files.
+- If JCEF were switched to windowed mode (registry `ide.browser.jcef.osr.enabled=false` with in-process JCEF), the native browser window would take drops itself and ChatGPT would handle them. Not handled, as it isn't the default.
+- Files dropped from outside the project are refused with a message, like other attachments (#VV0).
+- '@': the bridge script posts an event when '@' is typed into the prompt box (an `insertText` input of just '@', so pasting and the plugin's own insertions don't count). `AtTrigger` checks it is at the start or after whitespace (unit tested). On selection the '@' is deleted before the attachment, in turn with other attachment requests; if the prompt has changed so the '@' is no longer at its offset, it is left alone.
+- Folders always shown (#4QH): the platform's `GotoFileModel` lists folders only when the search text ends with '/' (and then only folders). `GotoFileOrFolderModel` swaps in a contributor that also returns folders for other search text.
 
 ## Phase 8: Folders and zips
 - [ ] Folder attachment: count files after exclusions, folders not counted; 3 or fewer as individual files, otherwise a zip (#Q18, #XI4).
@@ -78,6 +85,7 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - [ ] Intercept zip downloads from responses (`CefDownloadHandler`), add a diff button, and diff zip entries against project files by project-relative path, skipping unmatched files (#0RY, #15X, #F3R).
 
 ## Open questions to raise when reached
+- Browser drawing glitches (found in Phase 7, deferred): parts of ChatGPT's page are drawn misaligned, and stray characters that aren't in the prompt can appear, after the browser loses focus or the plugin edits the prompt. Resizing the tool window fixes it, so the page itself is fine; it is the IDE's off-screen drawing of the browser, probably redrawing only changed areas at 150% display scaling, made worse by the sandbox's software rendering. To try: have the browser redraw its whole view (`CefBrowser.invalidate()`, or `wasResized`) after the plugin edits the page and when the browser loses focus; check whether it also happens in the normal IDE with GPU acceleration; otherwise report it to JetBrains.
 - The Phase 5 spike may change the approach for file upload.
 - Phase 9: how a new chat without a conversation ID maps to a snapshot folder once ChatGPT assigns one. `ConversationTracker` reports a change from `New` to `Existing` both when the first message is sent and when the user opens an existing chat from a new-chat page; the two are not yet told apart.
 - Phase 8: zips and diff files are to be deleted once uploaded (#H4O). ChatGPT reads the file while uploading after `DOM.setFileInputFiles`, so deletion has to wait until the upload has finished; how to detect that in ChatGPT's page is not yet known.

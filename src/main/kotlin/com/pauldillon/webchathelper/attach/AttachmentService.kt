@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.pauldillon.webchathelper.WebChatNotifications
 import com.pauldillon.webchathelper.chatgpt.ChatGptBridge
@@ -14,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.nio.file.Path
 
 /**
  * Attaches project files and folders to ChatGPT's prompt (#7HS): uploads the files and injects a
@@ -39,13 +41,36 @@ class AttachmentService(private val project: Project, private val scope: Corouti
     /** Stops an attachment request; [message] is shown to the user. */
     private class AttachmentStopped(message: String) : Exception(message)
 
-    /** Attaches [selected] files and folders through [bridge], in the background. */
-    fun attach(bridge: ChatGptBridge, selected: List<VirtualFile>) {
+    /**
+     * Attaches [selected] files and folders through [bridge], in the background. [beforeAttach] runs first,
+     * in turn with other attachment requests, so it can change the prompt without disturbing them.
+     */
+    fun attach(bridge: ChatGptBridge, selected: List<VirtualFile>, beforeAttach: suspend () -> Unit = {}) {
         if (selected.isEmpty()) return
+        submit(bridge) {
+            beforeAttach()
+            selected
+        }
+    }
+
+    /** Attaches files and folders dropped onto the tool window (#LI7), given by their paths on disk. */
+    fun attachDropped(bridge: ChatGptBridge, paths: List<Path>) {
+        if (paths.isEmpty()) return
+        submit(bridge) {
+            // Refresh, as files dropped from the OS file explorer may be new to the IDE.
+            paths.map {
+                LocalFileSystem.getInstance().refreshAndFindFileByNioFile(it)
+                    ?: throw AttachmentStopped("$it can't be found, so nothing was attached.")
+            }
+        }
+    }
+
+    /** Runs an attachment request after the ones before it; [files] gives the files and folders to attach. */
+    private fun submit(bridge: ChatGptBridge, files: suspend () -> List<VirtualFile>) {
         scope.launch {
             lock.withLock {
                 try {
-                    attachNow(bridge, selected)
+                    attachNow(bridge, files())
                 } catch (e: AttachmentStopped) {
                     WebChatNotifications.warning(project, e.message!!)
                 } catch (e: ChatGptPageException) {
