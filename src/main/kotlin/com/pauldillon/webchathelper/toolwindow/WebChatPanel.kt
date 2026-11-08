@@ -11,6 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.util.ui.JBUI
+import com.pauldillon.webchathelper.chatgpt.ChatGptBridge
 import com.pauldillon.webchathelper.chatgpt.ChatGptPage
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -21,13 +22,16 @@ import javax.swing.JPanel
 /**
  * Tool window content: the ChatGPT browser (#R4F) with a button row underneath it.
  * The row shows the actions in [TOOLBAR_GROUP_ID]: reload (#K2W), home (#W4R), settings (#7IO),
- * and later attach (#Z7H).
+ * and later attach (#Z7H). [bridge] connects the plugin to ChatGPT's page.
  */
 class WebChatPanel(val project: Project) : JPanel(BorderLayout()), Disposable, UiDataProvider {
 
     /** Last address the browser showed, tracked so [reload] can reopen it even if the browser has died. */
     @Volatile
     private var lastUrl: String = ChatGptPage.URL
+
+    /** The plugin's connection to ChatGPT's page; moves to the new browser on [reload]. */
+    val bridge = ChatGptBridge().also { Disposer.register(this, it) }
 
     /** The current browser. Replaced by [reload]. */
     var browser: JBCefBrowser = createBrowser(ChatGptPage.URL)
@@ -61,6 +65,7 @@ class WebChatPanel(val project: Project) : JPanel(BorderLayout()), Disposable, U
     private fun createBrowser(url: String): JBCefBrowser {
         val newBrowser = JBCefBrowser.createBuilder().setUrl(url).build()
         Disposer.register(this, newBrowser)
+        bridge.bind(newBrowser)
         newBrowser.jbCefClient.addDisplayHandler(object : CefDisplayHandlerAdapter() {
             override fun onAddressChange(cefBrowser: CefBrowser, frame: CefFrame, url: String) {
                 if (frame.isMain) lastUrl = url

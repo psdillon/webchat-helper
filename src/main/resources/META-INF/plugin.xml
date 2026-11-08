@@ -31,6 +31,9 @@
                                  id="com.pauldillon.webchathelper.settings"
                                  displayName="WebChatHelper"
                                  instance="com.pauldillon.webchathelper.settings.WebChatHelperConfigurable"/>
+
+        <!-- Errors and information for the user, e.g. when ChatGPT's page no longer matches the plugin's selectors. -->
+        <notificationGroup id="WebChatHelper" displayType="BALLOON"/>
     </extensions>
 
     <actions>

@@ -25,11 +25,21 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - [x] The ChatGPT login persists across IDE restarts in the IDE's shared JCEF storage, with no plugin code needed (#E65). A configurable cookie store was dropped: the JCEF API does not allow a per-browser storage location (see the notes under #E65 in `SPEC.md`).
 
 ## Phase 5: ChatGPT page bridge (spike first)
-- [ ] Spike: prove programmatic file upload into ChatGPT's prompt (e.g. CDP `DOM.setFileInputFiles` vs. a synthetic drop event). Report findings before building on it.
-- [ ] Single module holding all page selectors and injected JavaScript, with clear user-facing errors when selectors stop matching.
-- [ ] JS-to-Kotlin bridge (`JBCefJSQuery`) for page events.
-- [ ] Read and modify prompt text, including inserting linebreaks without submitting.
-- [ ] Detect the current conversation identity (from the URL) and conversation changes, including new chats that have no ID yet.
+- [x] Spike: prove programmatic file upload into ChatGPT's prompt (e.g. CDP `DOM.setFileInputFiles` vs. a synthetic drop event). Report findings before building on it. Findings below.
+- [x] Single module holding all page selectors and injected JavaScript, with clear user-facing errors when selectors stop matching (`ChatGptPage`, run by `ChatGptBridge`).
+- [x] JS-to-Kotlin bridge (`JBCefJSQuery`) for page events.
+- [x] Read and modify prompt text, including inserting linebreaks without submitting.
+- [x] Detect the current conversation identity (from the URL) and conversation changes, including new chats that have no ID yet.
+
+### Spike findings (November 2026)
+- **File upload: DevTools protocol `DOM.setFileInputFiles`** on ChatGPT's general file input works, from the plugin through the browser's in-process `CefDevToolsClient` (`cefBrowser.devToolsClient`; no debugging port needed). ChatGPT treats it as the user choosing files in its "Add files" dialog and starts uploading at once. It takes file paths, so file contents never pass through JavaScript and large zips are no problem.
+- The general file input is the one in `form[data-chatgpt-composer]` with `multiple` and no `accept`; the form's other file inputs only take images or video.
+- Fallback, also proven: build `File` objects in the page, assign them to the input through a `DataTransfer` and fire `change`. Not used, because file contents would have to be passed into the page.
+- A synthetic drop event was not needed and was not tried.
+- ChatGPT renames an attachment whose name it has already seen in the same draft (`SpikeTest.kt` became `SpikeTest(1).kt`).
+- The prompt box is a ProseMirror editor, not a textarea. Each line, including Shift+Enter lines, is a top-level `<p>`. Text is inserted with `document.execCommand('insertText')` and lines with `execCommand('insertParagraph')`; neither submits the prompt, and inserted paths are not turned into markdown formatting.
+- `JBCefJSQuery` works with ChatGPT's content security policy; the bridge is injected on every page load.
+- The DevTools protocol's `Runtime.evaluate` is used for plugin-to-page calls that return results, so `JBCefJSQuery` is only used for page-to-plugin events.
 
 ## Phase 6: Attachment core
 - [ ] Exclusion matching with .gitignore-format globs relative to the project root (#AN7, #8BN), ignoring project .gitignore files (#2C0).
@@ -63,5 +73,6 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 
 ## Open questions to raise when reached
 - The Phase 5 spike may change the approach for file upload.
-- Phase 9: how a new chat without a conversation ID maps to a snapshot folder once ChatGPT assigns one.
+- Phase 9: how a new chat without a conversation ID maps to a snapshot folder once ChatGPT assigns one. `ConversationTracker` reports a change from `New` to `Existing` both when the first message is sent and when the user opens an existing chat from a new-chat page; the two are not yet told apart.
+- Phase 8: zips and diff files are to be deleted once uploaded (#H4O). ChatGPT reads the file while uploading after `DOM.setFileInputFiles`, so deletion has to wait until the upload has finished; how to detect that in ChatGPT's page is not yet known.
 - Phase 10: how the file name for a response code block is determined (code block header, nearby text, or another heuristic). The spec defines the match rule but not how the name is found.
