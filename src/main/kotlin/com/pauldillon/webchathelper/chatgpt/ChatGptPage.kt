@@ -16,7 +16,7 @@ import com.google.gson.Gson
  *   `multiple` and no `accept` filter. The others only take images or video.
  * - Attached files are listed in the form's `[data-composer-attachments]` element (present but hidden
  *   when there are none). Each has a button labelled "Remove <file name>", which assumes ChatGPT's
- *   English UI.
+ *   English UI. A file whose name is already in the draft is shown renamed, e.g. `A.kt` as `A(1).kt`.
  * - Conversation pages are `/c/<id>`, or `/g/<gpt or project>/c/<id>` for chats in a project or
  *   custom GPT. A new chat has no ID until its first message is sent.
  */
@@ -28,8 +28,10 @@ object ChatGptPage {
     private const val PROMPT_EDITOR_SELECTOR = "$COMPOSER_SELECTOR .ProseMirror[contenteditable='true']"
     private const val FILE_INPUT_SELECTOR = "$COMPOSER_SELECTOR input[type='file'][multiple]"
     private const val ATTACHMENT_LIST_SELECTOR = "$COMPOSER_SELECTOR [data-composer-attachments]"
+    /** Start of each attached file's "Remove <file name>" button label. */
+    private const val ATTACHMENT_REMOVE_LABEL = "Remove "
     /** Each attached file's "Remove <file name>" button; one per attachment, whatever its type. */
-    private const val ATTACHMENT_REMOVE_BUTTON_SELECTOR = "button[aria-label^='Remove ']"
+    private const val ATTACHMENT_REMOVE_BUTTON_SELECTOR = "button[aria-label^='$ATTACHMENT_REMOVE_LABEL']"
 
     /**
      * Most files ChatGPT accepts in one message (#UP4). Raised from 10 to 20 on the web in February 2026
@@ -61,6 +63,22 @@ object ChatGptPage {
     fun conversationId(url: String): String? = CONVERSATION_URL.find(url)?.groupValues?.get(1)
 
     fun isChatGptUrl(url: String): Boolean = CHATGPT_URL.containsMatchIn(url)
+
+    /**
+     * Whether [shownName], a name in the prompt's attachment list, is the file uploaded as [fileName].
+     * ChatGPT renames a file whose name is already in the draft by adding a number: `A.kt` becomes `A(1).kt`.
+     */
+    fun isAttachmentNamed(shownName: String, fileName: String): Boolean {
+        if (shownName == fileName) return true
+        val dot = fileName.lastIndexOf('.').takeIf { it > 0 } ?: fileName.length
+        val base = fileName.substring(0, dot)
+        val extension = fileName.substring(dot)
+        return shownName.startsWith(base) && shownName.endsWith(extension) &&
+            shownName.length > fileName.length &&
+            RENAMED_SUFFIX.matches(shownName.substring(base.length, shownName.length - extension.length))
+    }
+
+    private val RENAMED_SUFFIX = Regex("""\(\d+\)""")
 
     /** The address's path, without query or fragment; used to tell new-chat pages apart. */
     fun pagePath(url: String): String = url.substringBefore('#').substringBefore('?')
@@ -202,12 +220,13 @@ object ChatGptPage {
         """,
     )
 
-    /** Counts the files attached to the prompt. */
-    internal fun countAttachmentsScript(): String = script(
+    /** Lists the names of the files attached to the prompt, including ones still uploading. */
+    internal fun attachmentNamesScript(): String = script(
         """
         const list = document.querySelector(${js(ATTACHMENT_LIST_SELECTOR)});
         if (!list) return { missing: ${js(PART_ATTACHMENT_LIST)} };
-        return { ok: true, value: list.querySelectorAll(${js(ATTACHMENT_REMOVE_BUTTON_SELECTOR)}).length };
+        const buttons = [...list.querySelectorAll(${js(ATTACHMENT_REMOVE_BUTTON_SELECTOR)})];
+        return { ok: true, value: buttons.map(b => b.getAttribute('aria-label').slice(${ATTACHMENT_REMOVE_LABEL.length})) };
         """,
     )
 

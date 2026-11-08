@@ -72,6 +72,7 @@ In this document:
 * Temporary file lifetime: #T10
   * Snapshot folders are kept until the IDE exits, then deleted. #BN4
   * Zips and diff files are deleted once uploaded. #H4O
+    * Note: ChatGPT's page doesn't show when an upload has finished, and deleting a file before ChatGPT has read it breaks the upload. So a zip or diff file is deleted once it is no longer in the prompt's attachment list: the prompt was sent (which ChatGPT only allows once uploads have finished) or the user removed it. Any still waiting are deleted when the project closes.
 * The messages injected into the prompt for file/folder attachments will be ordered to match the order in which the user attached the files/folders. #25C
   * The first message is injected at the start of the prompt. #9N6
   * Each subsequent message is injected directly after the previously injected messages. #R1F

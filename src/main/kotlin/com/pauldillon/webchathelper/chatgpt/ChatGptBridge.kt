@@ -83,7 +83,11 @@ class ChatGptBridge : Disposable {
         evaluateScript(ChatGptPage.deletePromptTextScript(offset, expected)).asBoolean
 
     /** The number of files attached to the prompt, including ones still uploading. */
-    suspend fun countAttachments(): Int = evaluateScript(ChatGptPage.countAttachmentsScript()).asInt
+    suspend fun countAttachments(): Int = attachmentNames().size
+
+    /** The names of the files attached to the prompt, as ChatGPT shows them, including ones still uploading. */
+    suspend fun attachmentNames(): List<String> =
+        evaluateScript(ChatGptPage.attachmentNamesScript()).asJsonArray.map { it.asString }
 
     /**
      * Attaches [files] to the prompt, as if the user had chosen them in ChatGPT's "Add files" dialog.

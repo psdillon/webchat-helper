@@ -68,9 +68,15 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - Folders always shown (#4QH): the platform's `GotoFileModel` lists folders only when the search text ends with '/' (and then only folders). `GotoFileOrFolderModel` swaps in a contributor that also returns folders for other search text.
 
 ## Phase 8: Folders and zips
-- [ ] Folder attachment: count files after exclusions, folders not counted; 3 or fewer as individual files, otherwise a zip (#Q18, #XI4).
-- [ ] Zip naming, project-relative entry paths, empty folders included (#01S, #VV0, #R58).
-- [ ] Temp file creation and cleanup: zips and diff files deleted after upload (#MM4, #T10, #H4O).
+- [x] Folder attachment: count files after exclusions, folders not counted; 3 or fewer as individual files, otherwise a zip (#Q18, #XI4).
+- [x] Zip naming, project-relative entry paths, empty folders included (#01S, #VV0, #R58).
+- [x] Temp file creation and cleanup: zips and diff files deleted after upload (#MM4, #T10, #H4O).
+
+### Phase 8 notes
+- Zips are written with the platform's `Compressor.Zip` (`FolderZip`, unit tested), each in its own folder from `FileUtil.createTempDirectory` so it can have the folder's name. Every included folder gets a folder entry, so empty folders are kept (#R58), including folders whose contents are all excluded. Excluded folders are left out.
+- For the project root, the zip and the prompt message use the root folder's name ("project files under webchat-helper attached"), since its project-relative path is empty.
+- A zip counts as one file towards ChatGPT's per-message limit and is checked against the per-file size limit once written (#UP4). Every file in a zip is recorded as attached (#7P2).
+- Deleting zips after upload (#H4O): the page shows nothing the plugin can read that says an upload has finished, and deleting the file before ChatGPT has read it breaks the upload. So `TempUploads` checks the prompt's attachment list every 2 seconds and deletes a zip once it has left the list: the prompt was sent (ChatGPT only allows that once uploads have finished) or the user removed it. A zip that never appears within a minute is taken as refused by ChatGPT and deleted. Anything left is deleted when the project closes, and on IDE exit. Attachments are matched by name, allowing for ChatGPT's renaming of duplicates (`src.zip` shown as `src(1).zip`). Phase 9's diff files can use the same mechanism.
 
 ## Phase 9: Snapshots and incremental diffs
 - [ ] Per-conversation snapshot folder in the OS temp location, updated whenever a file is sent; deleted on IDE exit (#0RX, #H37, #5Z5, #62W, #BN4).
@@ -88,5 +94,4 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - Browser drawing glitches (found in Phase 7, deferred): parts of ChatGPT's page are drawn misaligned, and stray characters that aren't in the prompt can appear, after the browser loses focus or the plugin edits the prompt. Resizing the tool window fixes it, so the page itself is fine; it is the IDE's off-screen drawing of the browser, probably redrawing only changed areas at 150% display scaling, made worse by the sandbox's software rendering. To try: have the browser redraw its whole view (`CefBrowser.invalidate()`, or `wasResized`) after the plugin edits the page and when the browser loses focus; check whether it also happens in the normal IDE with GPU acceleration; otherwise report it to JetBrains.
 - The Phase 5 spike may change the approach for file upload.
 - Phase 9: how a new chat without a conversation ID maps to a snapshot folder once ChatGPT assigns one. `ConversationTracker` reports a change from `New` to `Existing` both when the first message is sent and when the user opens an existing chat from a new-chat page; the two are not yet told apart.
-- Phase 8: zips and diff files are to be deleted once uploaded (#H4O). ChatGPT reads the file while uploading after `DOM.setFileInputFiles`, so deletion has to wait until the upload has finished; how to detect that in ChatGPT's page is not yet known.
 - Phase 10: how the file name for a response code block is determined (code block header, nearby text, or another heuristic). The spec defines the match rule but not how the name is found.
