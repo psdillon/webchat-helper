@@ -17,6 +17,7 @@ WebChatHelper is an IntelliJ Platform plugin that runs the ChatGPT web UI in JCE
 - Requires JDK 25 (IntelliJ 2026.3 / build 263). `JAVA_HOME` must point to it; Gradle 9 will not run on older JDKs.
 - `./gradlew buildPlugin` builds the plugin zip into `build/distributions/`.
 - `./gradlew runIde` starts a sandbox IDE with the plugin. It blocks until the IDE is closed, so run it in the background. Confirm the plugin loaded by checking `.intellijPlatform/sandbox/webchat-helper/IU-2026.3/log_runIde/idea.log` for `Loaded custom plugins: WebChatHelper` and for `ERROR` lines.
+- `./gradlew runIde -PjcefDebugPort=9222` opens a Chrome remote debugging port on the sandbox's browser (`http://localhost:9222/json` lists pages); useful for inspecting ChatGPT's page. `README.md` has the user-facing version of these instructions; keep it in step.
 - `platformLocalPath` in `gradle.properties` builds against the locally installed IDE instead of downloading `platformVersion` (~1.6 GB plus extraction). It is set because the dev machine's C: drive is short on space; clear it to download instead.
 
 ## Implementation notes
