@@ -9,9 +9,12 @@ Tasks reference requirement IDs in `SPEC.md`. The order puts the riskiest parts 
 - [x] Add `.gitignore` for Gradle/IDE output (`.gradle/`, `build/`, `.idea/` as appropriate).
 
 ## Phase 2: Tool window and browser
-- [ ] Right-anchored tool window (#0E6) hosting a `JBCefBrowser` that loads ChatGPT (#R4F).
-- [ ] Toolbar/button row under the browser, ready for the attach and settings buttons (#Z7H, #7IO).
-- [ ] Handle JCEF not being supported (show a message instead of failing).
+- [x] Right-anchored tool window (#0E6) hosting a `JBCefBrowser` that loads ChatGPT (#R4F).
+- [x] Toolbar/button row under the browser, ready for the attach and settings buttons (#Z7H, #7IO).
+- [x] Handle JCEF not being supported (show a message instead of failing).
+- [x] Reload button that recreates the browser, recovering from JCEF restarts (#K2W).
+- [x] Home button that goes back to the ChatGPT start page (#W4R).
+- [x] Disable JCEF GPU acceleration for sandbox (`runIde`) runs; the dev machine's GPU process crashes.
 
 ## Phase 3: Settings
 - [ ] Application-level `PersistentStateComponent` and `Configurable` page in the IDE Settings dialog (#X4G, #Y0G).

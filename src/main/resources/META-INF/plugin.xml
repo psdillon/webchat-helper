@@ -16,4 +16,32 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <!-- #R4F: the embedded browser (JBCefBrowser) is provided by the bundled "Web Browser (JCEF)" plugin. -->
+    <depends>com.intellij.modules.jcef</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- #0E6: anchored on the right, like other AI tool windows. -->
+        <toolWindow id="WebChatHelper"
+                    anchor="right"
+                    icon="/icons/webChatToolWindow.svg"
+                    factoryClass="com.pauldillon.webchathelper.toolwindow.WebChatToolWindowFactory"/>
+    </extensions>
+
+    <actions>
+        <!-- Button row under the browser; the attach (#Z7H) and settings (#7IO) actions are added here. -->
+        <group id="WebChatHelper.BrowserToolbar">
+            <!-- #K2W -->
+            <action id="WebChatHelper.ReloadBrowser"
+                    class="com.pauldillon.webchathelper.toolwindow.ReloadBrowserAction"
+                    text="Reload ChatGPT"
+                    description="Recreate the embedded browser and reopen the current ChatGPT page"
+                    icon="AllIcons.Actions.Refresh"/>
+            <!-- #W4R -->
+            <action id="WebChatHelper.GoHome"
+                    class="com.pauldillon.webchathelper.toolwindow.GoHomeAction"
+                    text="ChatGPT Start Page"
+                    description="Go back to the ChatGPT start page"
+                    icon="AllIcons.Nodes.HomeFolder"/>
+        </group>
+    </actions>
 </idea-plugin>

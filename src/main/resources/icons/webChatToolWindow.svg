@@ -1,0 +1,5 @@
+<!-- Tool window icon (13x13): a speech bubble. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13">
+  <path fill="none" stroke="#6C707E" stroke-linejoin="round"
+        d="M2 1.5h9a1 1 0 0 1 1 1v5.5a1 1 0 0 1-1 1H6l-3 2.5V9H2a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1z"/>
+</svg>
