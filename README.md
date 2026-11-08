@@ -11,12 +11,8 @@ An IntelliJ Platform plugin that runs the ChatGPT web UI in a tool window on the
 
 If a terminal still has an old `JAVA_HOME`, set it for that session first:
 
-```powershell
-$env:JAVA_HOME = 'C:\Program Files\Java\jdk-25.0.5.0.3'   # PowerShell
-```
-
 ```bash
-export JAVA_HOME='/c/Program Files/Java/jdk-25.0.5.0.3'   # Git Bash
+export JAVA_HOME='/c/Program Files/Java/jdk-25.0.5.0.3'
 ```
 
 ### Start the sandbox IDE
@@ -27,7 +23,7 @@ From IntelliJ: open the **Gradle** tool window, then run **Tasks → intellij pl
 
 From a terminal in the project folder:
 
-```
+```bash
 ./gradlew runIde
 ```
 
@@ -44,7 +40,7 @@ Notes:
 
 To use Chrome DevTools on the sandbox's browser (for example to look at ChatGPT's page structure), start the sandbox with a remote debugging port:
 
-```
+```bash
 ./gradlew runIde -PjcefDebugPort=9222
 ```
 
@@ -54,7 +50,7 @@ The port is off by default: while it is open, any program on this machine can co
 
 ### Build the plugin
 
-```
+```bash
 ./gradlew buildPlugin
 ```
 
