@@ -61,6 +61,8 @@ In this document:
   * Files are stored at their path relative to the project root. #H37
   * Snapshot folders are created in the OS's conventional temp location. #5Z5
   * Whenever a file is sent (individually, in a zip or in a diff), its copy in the conversation's snapshot folder is updated. #62W
+  * A conversation is identified by the ID in its ChatGPT address. A new chat has no ID until its first message is sent, and has no snapshot folder until then: files sent before the ID appears are not added to any snapshot, so a folder attached in a new chat is always attached as a zip, and a later diff in that conversation includes those files as additions. #W3J
+    * Note: this avoids having to tell a new chat being given its ID apart from the user opening another chat, which look the same to the plugin (both are a change from a page with no ID to one with an ID). Getting that wrong would give a conversation a snapshot of files it never received, and so diffs against them.
 * If a folder that would be attached as a zip contains any files that are in the conversation's snapshot folder, a diff file will be attached instead of the zip, and the text "changes to <path> since last attachment<linebreak><linebreak>" will be injected into the prompt. #I81
   * The diff file is a unified diff file (`.diff`), not a patch file (e.g. not `git format-patch` output). #0Y9
   * The diff compares the folder's current files (after exclusions) against the snapshot folder's files under the same path. #D4X
