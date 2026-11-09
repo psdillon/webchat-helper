@@ -2,6 +2,25 @@
 
 An IntelliJ Platform plugin that runs the ChatGPT web UI in a tool window on the right of the IDE and automates attaching project files and diffing ChatGPT's responses. See `SPEC.md` for the requirements and `PLAN.md` for implementation progress.
 
+## Installation
+
+The plugin is not yet published to the JetBrains Marketplace, so build it and install the zip from disk. It needs IntelliJ IDEA 2026.3 or later.
+
+1. Build the plugin zip from the project folder (see [Prerequisites](#prerequisites) for what the build needs):
+
+   ```bash
+   ./gradlew buildPlugin
+   ```
+
+   This writes `build/distributions/webchat-helper-<version>.zip`, for example `webchat-helper-0.1.0.zip`.
+2. In IntelliJ, open **Settings** (`Ctrl+Alt+S`) and go to **Plugins**.
+3. Click the gear icon at the top of the Plugins page and choose **Install Plugin from Disk…**.
+4. Select the zip file itself, without unpacking it, and click **OK**.
+5. Restart the IDE if it asks you to.
+6. Open a project and click **WebChatHelper** on the right-hand tool window bar.
+
+To update, build again and repeat steps 2 to 5 with the new zip. To remove the plugin, go to **Settings → Plugins → Installed**, select **WebChatHelper** and choose **Uninstall** from its gear menu or dropdown.
+
 ## ChatGPT login and privacy
 
 The plugin keeps you logged in to ChatGPT the same way the IDE's other embedded browsers keep their state: in the IDE's shared browser storage, the `jcef_cache` folder in the IDE's system folder. On Windows that is `%LOCALAPPDATA%\JetBrains\IntelliJIdea2026.3\jcef_cache` for IntelliJ IDEA 2026.3.
