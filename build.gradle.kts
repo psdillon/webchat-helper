@@ -1,10 +1,21 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("org.jetbrains.intellij.platform")
 }
 
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain(21)
+    compilerOptions {
+        // The IDE provides the Kotlin standard library, so stay within the one bundled with the oldest
+        // supported IDE (2025.1 ships Kotlin 2.1).
+        languageVersion = KotlinVersion.KOTLIN_2_1
+        apiVersion = KotlinVersion.KOTLIN_2_1
+    }
 }
 
 dependencies {
@@ -17,17 +28,27 @@ dependencies {
         } else {
             local(localPath)
         }
-        // JCEF (JBCefBrowser etc.) is a separate bundled plugin since build 263 (#R4F).
-        bundledPlugin("com.intellij.modules.jcef")
         // Applying and previewing ChatGPT's patches uses the platform's patch classes (#XIO).
-        bundledPlugin("com.intellij.platform.vcs")
-        bundledModule("intellij.platform.vcs.core")
+        bundledModule("intellij.platform.vcs.impl")
     }
     // Plain unit tests of logic that doesn't need the IDE running.
     testImplementation("junit:junit:4.13.2")
 }
 
-tasks.runIde {
+val latestIdeLocalPath = providers.gradleProperty("latestIdeLocalPath").orNull?.takeIf { it.isNotBlank() }
+
+intellijPlatformTesting {
+    runIde {
+        // Runs the plugin, still built against the oldest supported IDE, in the newest one.
+        if (latestIdeLocalPath != null) {
+            register("runIdeLatest") {
+                localPath = file(latestIdeLocalPath)
+            }
+        }
+    }
+}
+
+tasks.withType<RunIdeTask>().configureEach {
     // The dev machine's GPU makes JCEF's GPU process crash repeatedly ("Too many restarts of the
     // GPU process"), so sandbox runs use software rendering. Overrides the IDE registry key.
     jvmArgs("-Dide.browser.jcef.gpu.disable=true")
@@ -44,6 +65,21 @@ intellijPlatform {
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
             untilBuild = provider { null }
+        }
+    }
+    pluginVerification {
+        // Not API usage levels: on 2025.1 the bridges Kotlin generates for ToolWindowFactory's default
+        // methods count as internal API usage. They stay listed in the report.
+        failureLevel = listOf(
+            VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS,
+            VerifyPluginTask.FailureLevel.MISSING_DEPENDENCIES,
+            VerifyPluginTask.FailureLevel.INVALID_PLUGIN,
+        )
+        ides {
+            create(IntelliJPlatformType.IntellijIdeaUltimate, providers.gradleProperty("platformVersion"))
+            if (latestIdeLocalPath != null) {
+                local(file(latestIdeLocalPath))
+            }
         }
     }
 }

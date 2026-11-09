@@ -14,11 +14,13 @@ WebChatHelper is an IntelliJ Platform plugin that runs the ChatGPT web UI in JCE
 
 ## Build and run
 
-- Requires JDK 25 (IntelliJ 2026.3 / build 263). `JAVA_HOME` must point to it; Gradle 9 will not run on older JDKs.
+- Requires JDK 21. `JAVA_HOME` must point to it. The plugin is compiled against the oldest supported IDE, IntelliJ 2025.1.1.1 (build 251), so the one zip also runs on newer IDEs; don't use APIs that only exist in newer builds without guarding them at runtime.
 - `./gradlew buildPlugin` builds the plugin zip into `build/distributions/`.
-- `./gradlew runIde` starts a sandbox IDE with the plugin. It blocks until the IDE is closed, so run it in the background. Confirm the plugin loaded by checking `.intellijPlatform/sandbox/webchat-helper/IU-2026.3/log_runIde/idea.log` for `Loaded custom plugins: WebChatHelper` and for `ERROR` lines.
+- `./gradlew runIde` starts a sandbox IDE with the plugin. It blocks until the IDE is closed, so run it in the background. Confirm the plugin loaded by checking `.intellijPlatform/sandbox/webchat-helper/IU-2025.1.1.1/log_runIde/idea.log` for `Loaded custom plugins: WebChatHelper` and for `ERROR` lines. The 2025.1 Ultimate sandbox shows a license dialog that blocks the tool window until someone signs in or starts a trial.
+- `./gradlew runIdeLatest` runs the same build in the IDE at `latestIdeLocalPath` (2026.3); its log is under `log_runIdeLatest` in the same sandbox folder.
+- `./gradlew verifyPlugin` checks API compatibility with 2025.1.1.1 and the IDE at `latestIdeLocalPath`. Run it after using a platform API you haven't used before.
 - `./gradlew runIde -PjcefDebugPort=9222` opens a Chrome remote debugging port on the sandbox's browser (`http://localhost:9222/json` lists pages); useful for inspecting ChatGPT's page. `README.md` has the user-facing version of these instructions; keep it in step.
-- `platformLocalPath` in `gradle.properties` builds against the locally installed IDE instead of downloading `platformVersion` (~1.6 GB plus extraction). It is set because the dev machine's C: drive is short on space; clear it to download instead.
+- `platformLocalPath` in `gradle.properties` builds against a locally installed IDE instead of downloading `platformVersion` (~1.6 GB plus extraction). It is blank because 2025.1.1.1 isn't installed on the dev machine.
 
 ## Implementation notes
 

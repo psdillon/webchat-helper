@@ -4,6 +4,7 @@ import com.google.gson.JsonElement
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup
 import com.intellij.ide.util.gotoByName.ChooseByNamePopupComponent
 import com.intellij.ide.util.gotoByName.GotoFileModel
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.diagnostic.thisLogger
@@ -40,7 +41,7 @@ class AtFileChooser(private val panel: WebChatPanel) {
         val settings = WebChatHelperSettings.getInstance().state
         val model = if (settings.atAlwaysShowFolders) GotoFileOrFolderModel(project) else GotoFileModel(project) // #4QH
         val popup = ChooseByNamePopup.createPopup(project, model, null as PsiElement?)
-        Disposer.register(popup, model)
+        (model as? Disposable)?.let { Disposer.register(popup, it) } // GotoFileModel is Disposable only on newer IDEs.
         popup.invoke(object : ChooseByNamePopupComponent.MultiElementsCallback() {
             override fun elementsChosen(elements: List<Any>) {
                 val files = elements.mapNotNull { (it as? PsiFileSystemItem)?.virtualFile }

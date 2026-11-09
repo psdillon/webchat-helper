@@ -26,6 +26,7 @@ In this document:
 
 * The plugin must run chatgpt in JCEF. #R4F
 * The plugin will not use any OpenAI APIs. #3Q0
+* The plugin must run on IntelliJ IDEA 2025.1.1.1 and later, and must build with JDK 21. #
 * The plugin's UI will be a tool window anchored on the right side of the IDE, following the convention of other AI tools. #0E6
 * A button under the JCEF will reload ChatGPT by recreating the browser and reopening the page it was showing, so the page can be recovered after the IDE restarts its embedded browser (e.g. after GPU process crashes). #K2W
 * A button under the JCEF, next to the reload button, will take the browser back to the ChatGPT start page. #W4R

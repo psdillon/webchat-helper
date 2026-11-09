@@ -16,8 +16,9 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
-    <!-- #R4F: the embedded browser (JBCefBrowser) is provided by the bundled "Web Browser (JCEF)" plugin. -->
-    <depends>com.intellij.modules.jcef</depends>
+    <!-- #R4F: the embedded browser (JBCefBrowser) is provided by the bundled "Web Browser (JCEF)" plugin
+         since build 263, and by the core platform before that, where this module doesn't exist. -->
+    <depends optional="true" config-file="webchat-helper-jcef.xml">com.intellij.modules.jcef</depends>
     <depends>com.intellij.modules.vcs</depends>
 
     <extensions defaultExtensionNs="com.intellij">

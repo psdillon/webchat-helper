@@ -1,0 +1,3 @@
+<!-- Intentionally empty: the optional dependency in plugin.xml exists only to give the plugin's class
+     loader access to JCEF on IDEs where it is a separate plugin (#R4F). -->
+<idea-plugin/>

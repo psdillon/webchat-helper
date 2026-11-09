@@ -4,7 +4,7 @@ An IntelliJ Platform plugin that runs the ChatGPT web UI in a tool window on the
 
 ## Installation
 
-The plugin is not yet published to the JetBrains Marketplace, so build it and install the zip from disk. It needs IntelliJ IDEA 2026.3 or later.
+The plugin is not yet published to the JetBrains Marketplace, so build it and install the zip from disk. It needs IntelliJ IDEA 2025.1 or later, and has been run on 2025.1.1.1 and 2026.3.
 
 1. Build the plugin zip from the project folder (see [Prerequisites](#prerequisites) for what the build needs):
 
@@ -42,13 +42,14 @@ A separate cookie store at a location you choose is not possible: IntelliJ's JCE
 
 ### Prerequisites
 
-- JDK 25. `JAVA_HOME` must point to it (Gradle fails on older JDKs). It is installed at `C:\Program Files\Java\jdk-25.0.5.0.3`.
-- IntelliJ IDEA 2026.3 installed at `C:\Program Files\JetBrains\IntelliJ IDEA 2026.3`. The build uses it instead of downloading the platform (`platformLocalPath` in `gradle.properties`; clear that setting to download instead).
+- JDK 21. `JAVA_HOME` must point to it. It is installed at `C:\Program Files\Java\jdk-21.0.12`.
+- The plugin is compiled against IntelliJ IDEA 2025.1.1.1, the oldest supported version, which the build downloads on first use. To use an installed copy instead, set `platformLocalPath` in `gradle.properties`.
+- Optional: IntelliJ IDEA 2026.3 installed at `C:\Program Files\JetBrains\IntelliJ IDEA 2026.3` (`latestIdeLocalPath` in `gradle.properties`), for checking the plugin on the newest IDE. Clear that setting if you don't have it.
 
 If a terminal still has an old `JAVA_HOME`, set it for that session first:
 
 ```bash
-export JAVA_HOME='/c/Program Files/Java/jdk-25.0.5.0.3'
+export JAVA_HOME='/c/Program Files/Java/jdk-21.0.12'
 ```
 
 ### Start the sandbox IDE
@@ -65,13 +66,26 @@ From a terminal in the project folder:
 
 The command keeps running until you close the sandbox IDE. Once it is up, open a project and click **WebChatHelper** on the right-hand tool window bar.
 
+To try the same build on the newest IDE, run this instead:
+
+```bash
+./gradlew runIdeLatest
+```
+
+To check the plugin's API use against both IDEs without opening them, run this (the first run downloads over 1 GB of dependencies):
+
+```bash
+./gradlew verifyPlugin
+```
+
 Notes:
 
+- `runIde` starts IntelliJ IDEA Ultimate 2025.1.1.1, which has no free tier, so the sandbox shows a **Manage Licenses** dialog until you sign in or start a trial. The dialog also blocks the tool window.
 - Open a project other than this one in the sandbox. Opening `webchat-helper` itself makes the sandbox index its own cache folder (`.intellijPlatform/`), which logs "file is being used by another process" warnings.
 - Restarting from inside the sandbox (for example after changing plugins) does not restart the sandbox: it closes it and opens your normal IntelliJ instead. Run `runIde` again.
 - GPU acceleration of the embedded browser is turned off for sandbox runs, because the GPU process crashes on this machine ("Too many restarts of the GPU process").
-- The sandbox log is `.intellijPlatform/sandbox/webchat-helper/IU-2026.3/log_runIde/idea.log`.
-- The sandbox's ChatGPT login is kept in `.intellijPlatform/sandbox/webchat-helper/IU-2026.3/system_runIde/jcef_cache/`, separate from your normal IDE's.
+- The sandbox log is `.intellijPlatform/sandbox/webchat-helper/IU-2025.1.1.1/log_runIde/idea.log`. For `runIdeLatest`, replace `runIde` with `runIdeLatest` in that path.
+- The sandbox has its own ChatGPT login, separate from your normal IDE's, in the browser storage under `.intellijPlatform/sandbox/webchat-helper/IU-2025.1.1.1/system_runIde/`.
 
 ### Inspect the embedded browser
 
