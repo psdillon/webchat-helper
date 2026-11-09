@@ -44,7 +44,7 @@ A separate cookie store at a location you choose is not possible: IntelliJ's JCE
 
 - JDK 21. `JAVA_HOME` must point to it. It is installed at `C:\Program Files\Java\jdk-21.0.12`.
 - The plugin is compiled against IntelliJ IDEA 2025.1.1.1, the oldest supported version, which the build downloads on first use. To use an installed copy instead, set `platformLocalPath` in `gradle.properties`.
-- Optional: IntelliJ IDEA 2026.3 installed at `C:\Program Files\JetBrains\IntelliJ IDEA 2026.3` (`latestIdeLocalPath` in `gradle.properties`), for checking the plugin on the newest IDE. Clear that setting if you don't have it.
+- Optional: IntelliJ IDEA 2026.3 installed at `C:\Program Files\JetBrains\IntelliJ IDEA 2026.3` (`latestIdeLocalPath` in `gradle.properties`), for checking the plugin on the newest IDE. Without that folder, the `runIdeLatest` task doesn't exist and `verifyPlugin` checks only 2025.1.1.1.
 
 If a terminal still has an old `JAVA_HOME`, set it for that session first:
 

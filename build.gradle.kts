@@ -35,7 +35,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 }
 
-val latestIdeLocalPath = providers.gradleProperty("latestIdeLocalPath").orNull?.takeIf { it.isNotBlank() }
+// Only machines with that IDE installed get the extra checks; the setting is ignored everywhere else.
+val latestIdeLocalPath = providers.gradleProperty("latestIdeLocalPath").orNull?.takeIf { it.isNotBlank() && file(it).isDirectory }
 
 intellijPlatformTesting {
     runIde {
